@@ -1,4 +1,4 @@
 cls
-cd C:\Users\Owner\pythonApps\pollbook2020
+cd C:\Users\Owner\pythonApps\pollbook
 python pollbook.py
 cd\

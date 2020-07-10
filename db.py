@@ -25,43 +25,12 @@ class Database:
         table_exists = self.cur.fetchone()[0]
         return table_exists    
 
-    def csv_to_array(self, file_name, table_name):
-        with open(file_name, 'r') as file:
-            no_records = 0
-            for row in file:
+    def insert_record(self, table_name, build_placeHolder, csv_row, complete=False):
+        query = "INSERT INTO "+table_name+" values ("+build_placeHolder+")"     
+        self.cur.execute(query, csv_row)
 
-                # remove carraige return '\n'
-                row = row.strip()
-                # create list - array
-                arr = row.split("|")
-                # remove last empty element which has no corresponding fieldname
-                if len(arr)==20:
-                    arr.pop()
-
-                #Get field names from first row
-                print('no_records: '+str(no_records))
-                if no_records == 0:    
-                    build_placeHolder = self.create_pollbook_table(arr, table_name)
-
-                query = "INSERT INTO "+table_name+" values ("+build_placeHolder+")"     
-                self.cur.execute(query, arr)
-                self.conn.commit()
-                no_records +=1
-                if no_records == 25:
-                    yield row
-                    print("1 ========================")
-                if no_records == 50:
-                    yield row
-                    print("2 ========================")                    
-                if no_records == 70:
-                    yield row
-                    print("3 ========================")                    
-                if no_records > 100:
-                   break 
-
-        self.conn.close()
-        print('\n{} Records Count: '.format(no_records))            
-
+        if complete==True:
+            self.conn.commit()
 
     def create_pollbook_table(self, headers, table_name):
         build_tableSchema = ''      
@@ -72,7 +41,8 @@ class Database:
             build_tableSchema +=  fld_name+' '+fieldType+','
             build_placeHolder += '?,'            
 
-        query = "CREATE TABLE IF NOT EXISTS "+table_name+" ( "+build_tableSchema[:-1]+")"     
+        build_tableSchema = build_tableSchema[:-1]
+        query = "CREATE TABLE IF NOT EXISTS "+table_name+" ( "+build_tableSchema+")"     
         print(query)
         self.cur.execute(query)
         self.conn.commit()

@@ -3,7 +3,7 @@ from random import randint
 from tkinter import filedialog
 from tkinter import messagebox
 from tkinter import ttk
-import os, time
+import os, time, csv
 
 
 from db import Database
@@ -45,17 +45,10 @@ def dir_browse():
 
 # Create Popup function
 def import_file(file_name):
-	f = os.path.basename(file_name)
-	response = messagebox.askokcancel("Importing CSV File", f'Import File {f} ? ')
-	if response == 1:
-		csv_to_sqlite(file_name, f)
-	else:
-		new_file() # return	display results		
-
-def csv_to_sqlite(file_name, f):
 	hide_menu_frames()
 	sqlite_import.pack(fill="both", expand=1)
 
+	f = os.path.basename(file_name)
 	mess = f"Importing {f} ....."
 	slqlite_flash = Label(sqlite_import, text=f"{mess}", font=("helvetica", 14))
 	slqlite_flash.pack(pady=10)
@@ -63,32 +56,77 @@ def csv_to_sqlite(file_name, f):
 	# ProgressBar
 	global my_progress 
 	my_progress = ttk.Progressbar(sqlite_import, orient=HORIZONTAL, length=300, mode="determinate")
-	my_progress.pack(pady=20)
+	my_progress.pack(pady=10)
+	global percent
+	percent = Label(sqlite_import, text="", anchor=S, font=("helvetica", 12))
+	percent.pack(pady=5)
 
+	response = messagebox.askokcancel("Importing CSV File", f'Import File {f} ? ')
+	if response == 1:
+		csv_to_sqlite(file_name, f)
+	else:
+		new_file() # return	display results		
+
+def csv_to_sqlite(file_name, f):
 	table_exists = db.check_table_exists('pollbook_june2020')
 	if table_exists == 1:
 		print('table_exists')
 	else:
-		print('build schema and create table')
+		complete = False
 		table_name="test"
-		gen = db.csv_to_array(file_name, table_name)
-		next(gen)
-		my_progress['value'] += 10
-		time.sleep(1)
+		build_placeHolder = ''
+		x = 0
+		tic = time.perf_counter()
+		total_rows = count_csv_lines(file_name)
+		exit_loop = total_rows -1
 
-		next(gen)		
-		my_progress['value'] += 10
-		time.sleep(1)
+		with open(file_name, 'r') as file:
+			no_records = 0
+			for row in file:
+				# remove carraige return '\n'
+				row = row.strip('\n')
+				# create list - array
+				csv_row = row.split("|")
+				# remove last empty element which has no corresponding fieldname
+				if len(csv_row)==20:
+					csv_row.pop()
 
-		next(gen)
-		my_progress['value'] += 10		
-		time.sleep(1)
+				if no_records == 0:    
+					build_placeHolder = db.create_pollbook_table(csv_row, table_name)
+				else:
+					db.insert_record(table_name, build_placeHolder, csv_row, complete)
+					complete = False
 
-		next(gen)
-		my_progress['value'] += 10				
-	
-		next(gen)		
+				if no_records > x:
+					unit = no_records/total_rows*100
+					my_progress['value'] = unit
+					my_progress.update_idletasks()	
+					percent['text'] = "{}%".format(int(unit))
+					toc = time.perf_counter()
+					print(f"CSV Imported rows {str(no_records)} in {toc - tic:0.4f} seconds")
+					x +=2000
+					complete = True
 
+				no_records +=1
+				if no_records >= exit_loop:
+					break
+
+			percent['text'] = "{}%".format(int(100))
+
+def count_csv_lines(file_name):
+	# number of lines in a text file 
+	file = open(file_name,"r") 
+	Counter = 0
+	# Reading from file 
+	Content = file.read() 
+	CoList = Content.split("\n") 
+	for i in CoList: 
+		if i: 
+			Counter += 1
+		
+	print("This is the number of lines in the file") 
+	print(Counter) 
+	return Counter
 
 # Create function 
 def display_results(frame_obj, mess):

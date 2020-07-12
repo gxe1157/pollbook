@@ -101,7 +101,7 @@ root.geometry("600x320")
 
 #root.iconbitmap(os.path.join(os.getcwd(), 'favicon.ico'))
 
-fields = 'input1', 'input2', 'input4', 'input5', 'input6'
+fields = ['input1', 'input2', 'input4', 'input5', 'input6']
 
 ents = makeform(root, fields)
 

@@ -91,12 +91,11 @@ def update_data():
 	form_no = t2.get()
 	muni = t3.get()
 
-	if messagebox.askyesno("Confirm Please","Are You sure you want to update this record?"):
-		query = f"UPDATE form_master SET form_no = {form_no} WHERE id = {rec_id}"
-		print(query)
-		cursor.execute(query)
-		conn.commit()
-		search(muni)
+	query = f"UPDATE form_master SET form_no = {form_no} WHERE id = {rec_id}"
+	print(query)
+	cursor.execute(query)
+	conn.commit()
+	search(muni)
 
 def add_new():
 	fname = t2.get()
@@ -117,6 +116,30 @@ def delete_row():
 	else:
 		return True
 
+def get_municipality(event):
+	pass
+
+## List box functions
+def delete_one():
+	my_listbox.delete(ANCHOR)
+
+def delete_all():
+	my_listbox.delete(0, END)  # "end"
+
+def select_show():
+	my_label.config(text=my_listbox.get(ANCHOR))		
+
+def select_all():
+	result = ''
+	for item in my_listbox.curselection():
+		result = result + mylistbox(item) +'\n'
+
+	print(result)		
+
+def delete_multiple():
+	for item in reverse(my_listbox.curselection()):
+		my_listbox.delete(item)
+
 root = Tk()
 root.title("My Application")
 root.geometry("800x700")
@@ -125,87 +148,126 @@ root.geometry("800x700")
 # Init varaibles
 q = StringVar()
 t1 = StringVar()
+t1a = StringVar()
+t1b = StringVar()
+t1c = StringVar()
+
 t2 = StringVar()
 t3 = StringVar()
 t4 = StringVar()
 t5 = StringVar()
+opts = StringVar()
+options = []
 
 # Create Section Frames
 wrapper1 = LabelFrame(root, text="Dispaly List")
-wrapper2 = LabelFrame(root, text="Search")
-wrapper3 = LabelFrame(root, text="Customer Data")
+wrapper2 = LabelFrame(root, text="Customer Data")
+wrapper3 = LabelFrame(root, text="Select Items for Update")
 
-wrapper1.pack(fill="none", expand="yes", padx="20", pady="10")
+wrapper1.pack(fill="both", expand="yes", padx="20", pady="10")
 wrapper2.pack(fill="both", expand="yes", padx="20", pady="10")
 wrapper3.pack(fill="both", expand="yes", padx="20", pady="10")
 
+# Combobox for select municipality
+# options = get_cust_list();
+options =['one', 'two', 'three']
+
+# global mycombo
+mycombo = ttk.Combobox(wrapper1, textvariable=opts, width=30, font=("helvetica", 12))	
+mycombo['values'] = options
+mycombo.pack(padx=5, pady=10)
+mycombo.current(0)
+mycombo.bind("<<ComboboxSelected>>", get_municipality )    
 
 # Display List Frame (Treeview)
-trv = ttk.Treeview(wrapper1, column=(1,2,3,4,5), show="headings", height="6")
+trv = ttk.Treeview(wrapper1, column=(1,2,3,4,5), show="headings", height="12")
 trv.pack()
 
-trv.heading(1, text="Id")
+trv.heading(1, text="Record No")
 trv.column(1, minwidth=0, width=100, stretch=YES)
 trv.heading(2, text="Form No.")
 trv.column(2, minwidth=0, width=160, stretch=YES)
 trv.heading(3, text="Municipality")
-trv.column(4, minwidth=0, width=160, stretch=YES)
+trv.column(4, minwidth=0, width=170, stretch=YES)
 trv.heading(4, text="Ward")
-trv.column(4, minwidth=0, width=160, stretch=YES)
+trv.column(4, minwidth=0, width=128, stretch=NO)
 trv.heading(5, text="District")
-trv.column(5, minwidth=0, width=160, stretch=YES)
+trv.column(5, minwidth=0, width=128, stretch=NO)
 
 # Get row data
 trv.bind('<Double 1>', getrow )
 
+#Scrollbar
+my_scrollbar = Scrollbar(wrapper3, orient=VERTICAL)
+
+#list Box
+# SINGLE, BROWSE, MULTIPLE, EXTENED
+my_listbox = Listbox(wrapper3, width=100, yscrollcommand=my_scrollbar.set)
+
+#scrollbar configure
+my_scrollbar.config(command=my_listbox.yview)
+my_scrollbar.pack(side=RIGHT, fill=Y)
+wrapper3.pack()
+
+my_listbox.pack(pady=5)
+
+my_listbox.insert(END, "This is an item1")
+my_listbox.insert(END, "This is an item2")
+my_listbox.insert(END, "This is an item3")
+my_listbox.insert(END, "This is an item4")
+my_listbox.insert(END, "This is an item5")
+my_listbox.insert(END, "This is an item6")
+my_listbox.insert(END, "This is an item7")
+my_listbox.insert(END, "This is an item8")
+my_listbox.insert(END, "This is an item9")
+my_listbox.insert(END, "This is an item10")
+
 # Clear and display default records
 clear()
 
-
-# Search Frame
-lbl = Label(wrapper2, text="Search")
-lbl.pack(side=tk.LEFT, padx=10)
-ent = Entry(wrapper2, textvariable=q)
-ent.pack(side=tk.LEFT, padx=6)
-btn = Button(wrapper2, text="Search", command=search)
-btn.pack(side=tk.LEFT, padx=6)
-cbtn = Button(wrapper2, text="Clear", command=clear)
-cbtn.pack(side=tk.LEFT, padx=6)
-
-
 # Data User Frame
 # Input Fields
-lbl1 = Label(wrapper3, text="ID")
+lbl1 = Label(wrapper2, text="Record No")
 lbl1.grid(row=0, column=0, padx=5, pady=3)
-ent1 = Entry(wrapper3, textvariable=t1, state="disabled")
+ent1 = Entry(wrapper2, textvariable=t1, state="disabled")
 ent1.grid(row=0, column=1, padx=5, pady=3)
 
-lbl2 = Label(wrapper3, text="Form No")
+lbl1a = Label(wrapper2, text="Poll Name")
+lbl1a.grid(row=1, column=3, padx=5, pady=3)
+ent1a = Entry(wrapper2, textvariable=t1a,  width=60)
+ent1a.grid(row=1, column=4, padx=5, pady=3)
+
+lbl1b = Label(wrapper2, text="Poll Location")
+lbl1b.grid(row=2, column=3, padx=5, pady=3)
+ent1b = Entry(wrapper2, textvariable=t1b,  width=60)
+ent1b.grid(row=2, column=4, padx=5, pady=3)
+
+lbl2 = Label(wrapper2, text="Form No")
 lbl2.grid(row=1, column=0, padx=5, pady=3)
-ent2 = Entry(wrapper3, textvariable=t2)
+ent2 = Entry(wrapper2, textvariable=t2)
 ent2.grid(row=1, column=1, padx=5, pady=3)
 
-lbl3 = Label(wrapper3, text="Municipality")
+lbl3 = Label(wrapper2, text="Municipality")
 lbl3.grid(row=2, column=0, padx=5, pady=3)
-ent3 = Entry(wrapper3, textvariable=t3, state="disabled")
+ent3 = Entry(wrapper2, textvariable=t3, state="disabled")
 ent3.grid(row=2, column=1, padx=5, pady=3)
 # ent2.place(x=78, y=30, width=200) #width in pixels
 
-lbl4 = Label(wrapper3, text="Ward")
+lbl4 = Label(wrapper2, text="Ward")
 lbl4.grid(row=3, column=0, padx=5, pady=3)
-ent4 = Entry(wrapper3, textvariable=t4, state="disabled")
+ent4 = Entry(wrapper2, textvariable=t4, state="disabled")
 ent4.grid(row=3, column=1, padx=5, pady=3)
 
-lbl5 = Label(wrapper3, text="District")
+lbl5 = Label(wrapper2, text="District")
 lbl5.grid(row=4, column=0, padx=5, pady=3)
-ent5 = Entry(wrapper3, textvariable=t5, state="disabled")
+ent5 = Entry(wrapper2, textvariable=t5, state="disabled")
 ent5.grid(row=4, column=1, padx=5, pady=3)
 
 
 # Buttons
-add_btn = Button(wrapper3, text="Add New", command=add_new)
-up_btn = Button(wrapper3, text="Update", command=update_data)
-delete_btn = Button(wrapper3, text="Delete", command=delete_row)
+add_btn = Button(wrapper2, text="Add New", command=add_new)
+up_btn = Button(wrapper2, text="Update", command=update_data)
+delete_btn = Button(wrapper2, text="Delete", command=delete_row)
 
 add_btn.grid(row=7, column=0, padx=2, pady=1)
 up_btn.grid(row=7, column=1, padx=2, pady=1)

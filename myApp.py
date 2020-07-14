@@ -67,6 +67,7 @@ def clear():
 	query = "SELECT ID, form_no, municipality, ward, district FROM form_master ORDER BY municipality, ward, district"
 	cursor.execute(query)
 	rows = cursor.fetchall()
+	print(rows[0])
 	update(rows)
 
 

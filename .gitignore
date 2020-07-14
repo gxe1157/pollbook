@@ -125,3 +125,4 @@ dmypy.json
 .pyre/
 store.db
 *.db
+pollbook.db

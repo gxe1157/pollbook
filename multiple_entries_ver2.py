@@ -46,31 +46,18 @@ def show_districts(mwd):
 			# add last value to mwds
 			mwds.append( temp_values.pop() )
 			temp_values=[]
-		# print(k, v)
+		print(k, v)
 	mwds.append( temp_values.pop() )
 
 	my_header.config(text=f"MUNICIPALITY: {v[4]}", font=("helvetica", 14))
-	# print(mwds)
+	print(mwds)
 
 	offset_y = 0
+
 	for i, item in enumerate(mwds):
-		print(f"First Details Line: {item}")
+		print( f"{1}  mwd: {item} offset_y: {offset_y}" )
 
-		mwd = item[0]  # District counts
-		ward_no = item[1]
-		mwd_id= item[2]
-
-		offset_y += 2		
-		rows_dn = math.ceil(((mwd/9)*2)+2)
-		exit_loop = False
-		xx = 1
-
-		print( f"mwd: {mwd}  rows_dn: {rows_dn}   offset_y: {offset_y}" )
-		for y in range(1,rows_dn,2):
-			print(f"y: {y}")
-			y1 = y+offset_y
-			y2 = y+1+offset_y
-
+'''
 			# Display Ward 
 			if y==1:
 				my_label = Label(root, width=10, text= f"Ward {ward_no}   [{mwd}]", fg="white", bg="grey")
@@ -95,7 +82,7 @@ def show_districts(mwd):
 			# Add extra offset for more than 2 line of district boxes		
 			if y > 1: offset_y += y
 			# print(f"Position: y {y} {i}")
-
+'''
 
 
 my_header = Label(root, text='MUNICIPALITY:', font=("helvetica", 14) )

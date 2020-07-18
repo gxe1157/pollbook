@@ -29,18 +29,21 @@ def check_table_form_master(table_name):
 	table_exists = cursor.fetchone()[0]
 
 	if table_exists == False:
-		cursor.execute("CREATE TABLE IF NOT EXISTS "+table_name+" (id INTEGER PRIMARY KEY, form_no integer, municipality text, ward text, district integer)")
+		cursor.execute("CREATE TABLE IF NOT EXISTS "+table_name+" (id INTEGER PRIMARY KEY, form_no integer, municipality text, ward text, district integer, dcount interger)")
 		conn.commit()
 
-		query = "SELECT DISTINCT municipality, ward, district FROM test ORDER BY municipality, ward, district"
+		query = "SELECT municipality, ward, district, count(district) as dcount FROM test GROUP BY municipality, ward, district ORDER BY municipality, ward, district"
 		cursor.execute(query)
 		rows = cursor.fetchall()
+		# print(rows)
+		# sys.exit('quit.................')
 
 		for row in rows:
 			municipality = row[0]
 			ward = row[1]
 			district = row[2]
-			cursor.execute("INSERT INTO "+table_name+" VALUES (?, ?, ?, ?, ?)", (None, None, municipality, ward, district))
+			dcount = row[3]
+			cursor.execute("INSERT INTO "+table_name+" VALUES (?, ?, ?, ?, ?, ?)", (None, None, municipality, ward, district, dcount))
 
 		conn.commit()
 
@@ -50,24 +53,22 @@ def update(rows):
 		trv.insert('', 'end', values=i)
 
 def search(muni=None):
-	if muni == None:
-		q2 = q.get().upper()
+	if muni == None or muni =='All...':
+		clear()
+		# q2 = q.get().upper()
 	else:
 		q2 = muni.upper()
-
-	query = "SELECT ID, form_no, municipality, ward, district FROM form_master WHERE municipality ='"+q2+"' ORDER BY municipality, ward, district"
-	cursor.execute(query)
-	rows = cursor.fetchall()
-	update(rows)
+		query = "SELECT ID, form_no, municipality, ward, district, dcount FROM form_master WHERE municipality ='"+q2+"' ORDER BY municipality, ward, district, dcount"
+		cursor.execute(query)
+		rows = cursor.fetchall()
+		update(rows)
 
 def clear():
-	check_table_form_master('form_master')
-
 	clear_inputs()	
-	query = "SELECT ID, form_no, municipality, ward, district FROM form_master ORDER BY municipality, ward, district"
+	query = "SELECT ID, form_no, municipality, ward, district, dcount FROM form_master ORDER BY municipality, ward, district, dcount"
 	cursor.execute(query)
 	rows = cursor.fetchall()
-	print(rows[0])
+	# print(rows[0])
 	update(rows)
 
 
@@ -117,8 +118,23 @@ def delete_row():
 	else:
 		return True
 
+## Combobox - Select Dropdown
+def fetch_municipalies():
+	check_table_form_master('form_master')
+	query = "SELECT id, municipality FROM form_master GROUP BY municipality ORDER BY municipality"
+	cursor.execute(query)
+	rows = cursor.fetchall()
+
+	options = ['All...']
+	for row in rows:
+		options.append(f"{row[1]}")
+
+	return options
+
 def get_municipality(event):
-	pass
+	muni = mycombo.get()
+	search(muni)
+
 
 ## List box functions
 def delete_one():
@@ -144,7 +160,7 @@ def delete_multiple():
 root = Tk()
 root.title("My Application")
 root.geometry("800x700")
-# root.resizable(False, False)
+root.resizable(False, False)
 
 # Init varaibles
 q = StringVar()
@@ -157,6 +173,7 @@ t2 = StringVar()
 t3 = StringVar()
 t4 = StringVar()
 t5 = StringVar()
+
 opts = StringVar()
 options = []
 
@@ -170,8 +187,7 @@ wrapper2.pack(fill="both", expand="yes", padx="20", pady="10")
 wrapper3.pack(fill="both", expand="yes", padx="20", pady="10")
 
 # Combobox for select municipality
-# options = get_cust_list();
-options =['one', 'two', 'three']
+options = fetch_municipalies();
 
 # global mycombo
 mycombo = ttk.Combobox(wrapper1, textvariable=opts, width=30, font=("helvetica", 12))	
@@ -181,30 +197,35 @@ mycombo.current(0)
 mycombo.bind("<<ComboboxSelected>>", get_municipality )    
 
 # Display List Frame (Treeview)
-trv = ttk.Treeview(wrapper1, column=(1,2,3,4,5), show="headings", height="12")
+trv = ttk.Treeview(wrapper1, column=(1,2,3,4,5,6), show="headings", height="12", selectmode='browse')
+# trv.place(x=30, y=45)
+
+vsb = ttk.Scrollbar(wrapper1, orient="vertical", command=trv.yview)
+vsb.place(x=730, y=45, height=265)
+trv.configure(yscrollcommand=vsb.set)
 trv.pack()
 
 trv.heading(1, text="Record No")
-trv.column(1, minwidth=0, width=100, stretch=YES)
+trv.column(1, minwidth=0, width=100, anchor=E, stretch=YES)
 trv.heading(2, text="Form No.")
-trv.column(2, minwidth=0, width=160, stretch=YES)
+trv.column(2, minwidth=0, anchor=CENTER, width=100, stretch=NO)
 trv.heading(3, text="Municipality")
 trv.column(4, minwidth=0, width=170, stretch=YES)
 trv.heading(4, text="Ward")
-trv.column(4, minwidth=0, width=128, stretch=NO)
+trv.column(4, minwidth=0, anchor=E, width=100, stretch=NO)
 trv.heading(5, text="District")
-trv.column(5, minwidth=0, width=128, stretch=NO)
+trv.column(5, minwidth=0, anchor=E, width=100, stretch=NO)
+trv.heading(6, text="Totals")
+trv.column(6, minwidth=0, anchor=E, width=90, stretch=NO)
 
 # Get row data
 trv.bind('<Double 1>', getrow )
 
-#Scrollbar
+#Scrollbar wrapper3
 my_scrollbar = Scrollbar(wrapper3, orient=VERTICAL)
-
 #list Box
 # SINGLE, BROWSE, MULTIPLE, EXTENED
 my_listbox = Listbox(wrapper3, width=100, yscrollcommand=my_scrollbar.set)
-
 #scrollbar configure
 my_scrollbar.config(command=my_listbox.yview)
 my_scrollbar.pack(side=RIGHT, fill=Y)

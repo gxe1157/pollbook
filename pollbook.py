@@ -1,3 +1,5 @@
+# main Pollbook application #
+
 from tkinter import *
 import tkinter as tk
 from random import randint
@@ -18,15 +20,15 @@ def dir_browse():
 		messagebox.showerror("Validation Error:", resp)
 		return
 
-	file_name =  filedialog.askopenfilename(initialdir = "/",title = "Select file",filetypes = (("all files","*.*"),("jpeg files","*.jpg")))
-	if file_name != "":
-		import_file(file_name)
+	csv_file_name =  filedialog.askopenfilename(initialdir = "/",title = "Select file",filetypes = (("all files","*.*"),("jpeg files","*.jpg")))
+	if csv_file_name != "":
+		import_file(csv_file_name)
 	else:
 		return
 
 # Create Popup function
-def import_file(file_name):
-	f = os.path.basename(file_name)
+def import_file(csv_file_name):
+	f = os.path.basename(csv_file_name)
 	mess = f"Importing {f} ....."
 	slqlite_flash = Label(new_frame, text=f"{mess}", font=("helvetica", 14))
 
@@ -34,22 +36,26 @@ def import_file(file_name):
 	if response == 1:
 		slqlite_flash.pack(pady=10)
 		# ProgressBar
-		global my_progress 
-		my_progress = ttk.Progressbar(new_frame, orient=HORIZONTAL, length=300, mode="determinate")
-		my_progress.pack(pady=10)
+		global progress_bar 
+		progress_bar = ttk.Progressbar(new_frame, orient=HORIZONTAL, length=300, mode="determinate")
+		progress_bar.pack(pady=10)
 		global percent
 		percent = Label(new_frame, text="", anchor=S, font=("helvetica", 12))
 		percent.pack(pady=5)
 
-		db.csv_to_sqlite(file_name, f, my_progress, percent, messagebox)
-		open_file();
+		table_name = project_name.get()
+		resp = db.csv_to_sqlite(csv_file_name, progress_bar, percent, messagebox, table_name)
+		if resp == False:
+			new_file() # return	display results
+		else:											
+			open_file();
 
 	else:
 		new_file() # return	display results		
 
 
 def get_cust_list():
-	results = db.fetch_customers()
+	results = db.fetch_all('customers')
 	options = ['Please Select....']
 	for row in results:
 		options.append(str(row[0])+" - "+row[1])
@@ -62,7 +68,7 @@ def get_cust_data(event):
  	# print(mycombo.get())
  	# option = mycombo.get()
  	# id = option.split("-")[0]
- 	# db.fetch_by_id(id)
+ 	# db.fetch_by_id(id, 'customers')
  	# for i in rows:
  	# 	customer.set(i[1])
  	# 	contact.set(i[2])
@@ -130,24 +136,29 @@ def open_file():
 
 
 	# Display List Frame (Treeview)
-	trv = ttk.Treeview(wrapper1, column=(1,2,3), show="headings", height="6")
+	global trv
+	trv = ttk.Treeview(wrapper1, column=(1,2,3), show="headings", height="12")
 	trv.pack()
 
-	trv.heading(1, text="ID")
-	trv.heading(2, text="First Name")
-	trv.heading(3, text="Last Name")
+	# trv.heading(1, text="Record No")
+	# trv.column(1, minwidth=0, width=100, anchor=E, stretch=YES)
+	trv.heading(1, text="Municipality")
+	trv.column(1, minwidth=0, width=170, stretch=YES)
+	trv.heading(2, text="Ward")
+	trv.column(2, minwidth=0, anchor=E, width=100, stretch=NO)
+	trv.heading(3, text="District")
+	trv.column(3, minwidth=0, anchor=E, width=100, stretch=NO)
 
 	# Get row data
-	# trv.bind('<Double 1>', getrow )
+	trv.bind('<Double 1>', getrow )
 
 	# Buttons
-	expbtn = Button(wrapper1, text="Export CSV", command=export)
+	expbtn = Button(wrapper1, text="Export CSV", command=export_csv)
 	expbtn.pack(side=tk.LEFT, padx=10, pady=10)
 
 
 	# Clear and display default records
-	# clear()
-
+	clear()
 
 	# Search Frame
 	lbl = Label(wrapper2, text="Search")
@@ -254,6 +265,14 @@ def new_file_validation():
 	if project_name.get() =='':
 		error_mess += f"\nProject Name empty and is required\n"
 
+	if project_name.get() !='':
+		table_name = project_name.get()
+		chk_name = table_name.replace(' ', '_')
+		table_exists = db.check_table_exists(chk_name)
+		if table_exists == 1:
+			error_mess = f"Project name is aready taken. Please select another name."
+			project_name.delete(0, END) #deletes the current value
+
 	return error_mess
 
 #################
@@ -261,13 +280,18 @@ def new_file_validation():
 #################
 # functions
 def update(rows):
-	pass
+	trv.delete(*trv.get_children())
+	for i in rows:
+		trv.insert("","end", values=i)
 
 def search():
 	pass
 
 def clear():
-	pass
+	# clear_inputs()	
+	table_name ='test'
+	rows = db.fetch_voters(table_name)
+	update(rows)
 
 def clear_inputs():
 	pass
@@ -275,13 +299,21 @@ def clear_inputs():
 def getrow(event):
 	pass
 
+	# rowid = trv.identify_row(event.y)
+	# item = trv.item(trv.focus())
+	# t1.set(item['values'][0])
+	# t2.set(item['values'][1])
+	# t3.set(item['values'][2])		
+	# t4.set(item['values'][3])		
+	# t5.set(item['values'][4])
+
 def update_data():
 	pass
 
 def add_new():
 	pass
 
-def delete():
+def delete_row():
 	pass
 
 def export_csv():

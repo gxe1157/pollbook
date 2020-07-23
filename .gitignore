@@ -123,10 +123,7 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
-store.db
-*.db
-pollbook.db
 *.db
 *.zip
-*.db
-*.db
+
+pollbook.db

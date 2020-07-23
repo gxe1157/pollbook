@@ -29,11 +29,9 @@ class Database:
         table_exists = self.cur.fetchone()[0]
         return table_exists    
 
-
     def __del__(self):
         self.conn.close()
         
-
     def insert_user(self, username, password):
         self.cur.execute("INSERT INTO users VALUES (NULL, ?, ?)",
                          (username, password))
@@ -68,7 +66,6 @@ class Database:
         rows = self.cur.fetchone()
         print(rows)
         return rows
-
 
     def csv_to_sqlite(self, csv_file_name, progress_bar, percent, messagebox, table_name):
         number_columns = 0
@@ -132,6 +129,49 @@ class Database:
 
                 percent['text'] = "{}%".format(int(100))
     
+    #=============================================#
+    #  
+    #=============================================#
+    def check_table_form_master(self, table_name):
+        ''' Create lookup table by municipality, ward, district with counts by districts '''
+        table_exists=self.check_table_exists(table_name)        
+        if table_exists == False:
+            self.cur.execute("CREATE TABLE IF NOT EXISTS "+table_name+" (id INTEGER PRIMARY KEY, form_no integer, municipality text, ward text, district integer, dcount interger)")
+            self.conn.commit()
+
+            query = "SELECT municipality, ward, district, count(district) as dcount FROM test GROUP BY municipality, ward, district ORDER BY municipality, ward, district"
+            self.cur.execute(query)
+            rows = self.cur.fetchall()
+            for row in rows:
+                municipality = row[0]
+                ward = row[1]
+                district = row[2]
+                dcount = row[3]
+                self.cur.execute("INSERT INTO "+table_name+" VALUES (?, ?, ?, ?, ?, ?)", (None, None, municipality, ward, district, dcount))
+            self.conn.commit()
+
+    def fetch_clients(self):
+        self.check_table_form_master('form_master')        
+        query = "SELECT id, municipality FROM form_master GROUP BY municipality ORDER BY municipality"
+        rows = self.cur.execute(query)
+        return rows
+
+    def fetch_mwd(self, muni=None):
+        if muni == None: 
+            muni = f"municipality != ''"
+        else:
+            muni = f"municipality = '{muni}'"
+
+        query = "SELECT id, form_no, municipality, ward, district, dcount FROM \
+                        form_master WHERE "+muni+" ORDER BY municipality, ward, district, dcount"
+        rows = self.cur.execute(query)
+        return rows
+
+    def run_query(self, query):
+        print(query)
+        self.cur.execute(query)
+        self.conn.commit()        
+
 
     #=============================================#
     # Private class methods used only by db.py

@@ -1,11 +1,10 @@
 # main Pollbook application #
-
-from tkinter import *
+from tkinter import  *
 import tkinter as tk
+from tkinter import ttk
+from tkinter import messagebox
 from random import randint
 from tkinter import filedialog
-from tkinter import messagebox
-from tkinter import ttk
 import os, sys
 
 
@@ -13,66 +12,8 @@ from db import Database
 db = Database('pollbook.db')
 
 
-#Browse dir
-def dir_browse():
-	resp = new_file_validation() 
-	if resp != '':
-		messagebox.showerror("Validation Error:", resp)
-		return
-
-	csv_file_name =  filedialog.askopenfilename(initialdir = "/",title = "Select file",filetypes = (("all files","*.*"),("jpeg files","*.jpg")))
-	if csv_file_name != "":
-		import_file(csv_file_name)
-	else:
-		return
-
-# Create Popup function
-def import_file(csv_file_name):
-	f = os.path.basename(csv_file_name)
-	mess = f"Importing {f} ....."
-	slqlite_flash = Label(new_frame, text=f"{mess}", font=("helvetica", 14))
-
-	response = messagebox.askokcancel("Importing CSV File", f'Import File {f} ? ')
-	if response == 1:
-		slqlite_flash.pack(pady=10)
-		# ProgressBar
-		global progress_bar 
-		progress_bar = ttk.Progressbar(new_frame, orient=HORIZONTAL, length=300, mode="determinate")
-		progress_bar.pack(pady=10)
-		global percent
-		percent = Label(new_frame, text="", anchor=S, font=("helvetica", 12))
-		percent.pack(pady=5)
-
-		table_name = project_name.get()
-		resp = db.csv_to_sqlite(csv_file_name, progress_bar, percent, messagebox, table_name)
-		if resp == False:
-			new_file() # return	display results
-		else:											
-			open_file();
-
-	else:
-		new_file() # return	display results		
-
-
-def get_cust_list():
-	results = db.fetch_all('customers')
-	options = ['Please Select....']
-	for row in results:
-		options.append(str(row[0])+" - "+row[1])
-
-	return options
-
-def get_cust_data(event):
-	pass
-	
- 	# print(mycombo.get())
- 	# option = mycombo.get()
- 	# id = option.split("-")[0]
- 	# db.fetch_by_id(id, 'customers')
- 	# for i in rows:
- 	# 	customer.set(i[1])
- 	# 	contact.set(i[2])
-
+#============================= Frame options start ==============================================
+# Login
 def login():
 	# u = username.get()
 	# p = password.get()
@@ -89,9 +30,102 @@ def login():
 
 	logged_in()	
 
-#Create our new_file function
+# Logged in
+def logged_in():
+	hide_menu_frames()
+	start_frame.pack(fill="both", expand=1)
+	start_label = Label(start_frame, text="Election Poll Books", font=("Helvetica", 18)).pack(pady=40)
+	restore_menu()
+
+# Create Poll Book
 def new_file():
 	reset_run_frame(new_frame)
+	muni_list={}
+	#======================= Inner functions ===================================================
+	#Browse dir
+	def dir_browse():
+		resp = new_file_validation() 
+		if resp != '':
+			messagebox.showerror("Validation Error:", resp)
+			return
+
+		csv_file_name =  filedialog.askopenfilename(initialdir = "/",title = "Select file",filetypes = (("all files","*.*"),("jpeg files","*.jpg")))
+		if csv_file_name != "":
+			import_file(csv_file_name)
+		else:
+			return
+
+	#Form Validation
+	def new_file_validation():
+		print(client_combo.current())
+		error_mess = ''
+		if  client_combo.current() == 0:
+			error_mess += f"\nAccount not selected. Please select one to continue.\n"
+
+		if project_name.get() =='':
+			error_mess += f"\nProject Name empty and is required\n"
+
+		if project_name.get() !='':
+			table_name = project_name.get()
+			chk_name = table_name.replace(' ', '_')
+			table_exists = db.check_table_exists(chk_name)
+			if table_exists == 1:
+				error_mess = f"Project name is aready taken. Please select another name."
+				project_name.delete(0, END) #deletes the current value
+
+		return error_mess
+
+	# Create Popup function
+	def import_file(csv_file_name):
+		f = os.path.basename(csv_file_name)
+		mess = f"Importing {f} ....."
+		slqlite_flash = Label(new_frame, text=f"{mess}", font=("helvetica", 14))
+
+		response = messagebox.askokcancel("Importing CSV File", f'Import File {f} ? ')
+		if response == 1:
+			slqlite_flash.pack(pady=10)
+			# ProgressBar
+			global progress_bar 
+			progress_bar = ttk.Progressbar(new_frame, orient=HORIZONTAL, length=300, mode="determinate")
+			progress_bar.pack(pady=10)
+			global percent
+			percent = Label(new_frame, text="", anchor=S, font=("helvetica", 12))
+			percent.pack(pady=5)
+
+			table_name = project_name.get()
+			resp = db.csv_to_sqlite(csv_file_name, progress_bar, percent, messagebox, table_name)
+			if resp == False:
+				new_file() # return	display results
+			else:											
+				open_file()
+
+		else:
+			new_file() # return	display results		
+
+	def get_cust_list():
+		print(muni_list);
+
+		results = db.fetch_all('customers')
+		options = ['Please Select....']
+		for row in results:
+			options.append(row[1])
+			muni_list[row[1]] = row[0]
+
+		print(muni_list);			
+		return options
+
+	def get_cust_data(event):
+		print('get directory path')
+		print(muni_list);					
+		return True
+
+		# print(client_combo.get())
+		# option = client_combo.get()
+		# id = option.split("-")[0]
+		# db.fetch_by_id(id, 'customers')
+		# for i in rows:
+		# 	customer.set(i[1])
+		# 	contact.set(i[2])
 
 	# Page Header 
 	text_mess = "Create New Pollbook: Import New File."
@@ -102,12 +136,12 @@ def new_file():
 	options = get_cust_list();
 	project_account_lbl = Label(new_frame, text='Account', font=("helvetica", 12)).pack(pady=10)
 
-	global mycombo
-	mycombo = ttk.Combobox(new_frame, textvariable=opts, width=30, font=("helvetica", 12))	
-	mycombo['values'] = options
-	mycombo.pack(padx=10, pady=6)
-	mycombo.current(0)
-	mycombo.bind("<<ComboboxSelected>>", get_cust_data )    
+	global client_combo
+	client_combo = ttk.Combobox(new_frame, textvariable=opts, width=30, font=("helvetica", 12))	
+	client_combo['values'] = options
+	client_combo.pack(padx=10, pady=6)
+	client_combo.current(0)
+	client_combo.bind("<<ComboboxSelected>>", get_cust_data )    
 
 	global project_name 
 	project_name_lbl = Label(new_frame, text="Project Name", font=("helvetica", 12)).pack(pady=10)	
@@ -117,116 +151,134 @@ def new_file():
 	# Buttons
 	add_btn = Button(new_frame, text='Get File', width=12, command=dir_browse).pack(pady=10)
 
-#Create our open_file function
+# Open Poll Book
 def open_file():
 	reset_run_frame(open_frame)
+
 	# Page Header 
 	text_mess = "Project: "	
 	my_flash = Label(open_frame, text=f"{text_mess}", font=("helvetica", 14))
 	my_flash.pack(pady=5)
 
+
 	# Create Section Frames
-	wrapper1 = LabelFrame(open_frame, text="Dispaly List")
-	wrapper2 = LabelFrame(open_frame, text="Search")
-	wrapper3 = LabelFrame(open_frame, text="Customer Data")
+	wrapper1 = LabelFrame(root, text="Dispaly List")
+	wrapper2 = LabelFrame(root, text="Customer Data")
+	wrapper3 = LabelFrame(root, text="Select Items for Update")
 
 	wrapper1.pack(fill="both", expand="yes", padx="20", pady="10")
 	wrapper2.pack(fill="both", expand="yes", padx="20", pady="10")
 	wrapper3.pack(fill="both", expand="yes", padx="20", pady="10")
 
+	# Combobox for select municipality
+	options = fetch_municipalies();
+
+	global mycombo
+	mycombo = ttk.Combobox(wrapper1, textvariable=opts, width=30, font=("helvetica", 12))	
+	mycombo['values'] = options
+	mycombo.pack(padx=5, pady=10)
+	mycombo.current(0)
+	mycombo.bind("<<ComboboxSelected>>", get_municipality )    
 
 	# Display List Frame (Treeview)
 	global trv
-	trv = ttk.Treeview(wrapper1, column=(1,2,3), show="headings", height="12")
+	trv = ttk.Treeview(wrapper1, column=(1,2,3,4,5,6), show="headings", height="12", selectmode='browse')
+	# trv.place(x=30, y=45)
+	global vsb
+	vsb = ttk.Scrollbar(wrapper1, orient="vertical", command=trv.yview)
+	vsb.place(x=730, y=45, height=265)
+	trv.configure(yscrollcommand=vsb.set)
 	trv.pack()
 
-	# trv.heading(1, text="Record No")
-	# trv.column(1, minwidth=0, width=100, anchor=E, stretch=YES)
-	trv.heading(1, text="Municipality")
-	trv.column(1, minwidth=0, width=170, stretch=YES)
-	trv.heading(2, text="Ward")
-	trv.column(2, minwidth=0, anchor=E, width=100, stretch=NO)
-	trv.heading(3, text="District")
-	trv.column(3, minwidth=0, anchor=E, width=100, stretch=NO)
+	trv.heading(1, text="Record No")
+	trv.column(1, minwidth=0, width=100, anchor=E, stretch=YES)
+	trv.heading(2, text="Form No.")
+	trv.column(2, minwidth=0, anchor=CENTER, width=100, stretch=NO)
+	trv.heading(3, text="Municipality")
+	trv.column(4, minwidth=0, width=170, stretch=YES)
+	trv.heading(4, text="Ward")
+	trv.column(4, minwidth=0, anchor=E, width=100, stretch=NO)
+	trv.heading(5, text="District")
+	trv.column(5, minwidth=0, anchor=E, width=100, stretch=NO)
+	trv.heading(6, text="Totals")
+	trv.column(6, minwidth=0, anchor=E, width=90, stretch=NO)
 
 	# Get row data
 	trv.bind('<Double 1>', getrow )
 
-	# Buttons
-	expbtn = Button(wrapper1, text="Export CSV", command=export_csv)
-	expbtn.pack(side=tk.LEFT, padx=10, pady=10)
+	#Scrollbar wrapper3
+	my_scrollbar = Scrollbar(wrapper3, orient=VERTICAL)
+	#list Box
+	# SINGLE, BROWSE, MULTIPLE, EXTENED
+	my_listbox = Listbox(wrapper3, width=100, yscrollcommand=my_scrollbar.set)
+	#scrollbar configure
+	my_scrollbar.config(command=my_listbox.yview)
+	my_scrollbar.pack(side=RIGHT, fill=Y)
+	wrapper3.pack()
 
+	my_listbox.pack(pady=5)
+
+	my_listbox.insert(END, "This is an item1")
+	my_listbox.insert(END, "This is an item2")
+	my_listbox.insert(END, "This is an item3")
+	my_listbox.insert(END, "This is an item4")
+	my_listbox.insert(END, "This is an item5")
+	my_listbox.insert(END, "This is an item6")
+	my_listbox.insert(END, "This is an item7")
+	my_listbox.insert(END, "This is an item8")
+	my_listbox.insert(END, "This is an item9")
+	my_listbox.insert(END, "This is an item10")
 
 	# Clear and display default records
 	clear()
 
-	# Search Frame
-	lbl = Label(wrapper2, text="Search")
-	lbl.pack(side=tk.LEFT, padx=10)
-	ent = Entry(wrapper2, textvariable=q)
-	ent.pack(side=tk.LEFT, padx=6)
-	btn = Button(wrapper2, text="Search", command=search)
-	btn.pack(side=tk.LEFT, padx=6)
-	cbtn = Button(wrapper2, text="Clear", command=clear)
-	cbtn.pack(side=tk.LEFT, padx=6)
-
-
 	# Data User Frame
 	# Input Fields
-	lbl1 = Label(wrapper3, text="ID")
+	lbl1 = Label(wrapper2, text="Record No")
 	lbl1.grid(row=0, column=0, padx=5, pady=3)
-	ent1 = Entry(wrapper3, textvariable=t1, state="disabled")
+	ent1 = Entry(wrapper2, textvariable=t1, state="disabled")
 	ent1.grid(row=0, column=1, padx=5, pady=3)
 
-	lbl2 = Label(wrapper3, text="First Name")
+	lbl1a = Label(wrapper2, text="Poll Name")
+	lbl1a.grid(row=1, column=3, padx=5, pady=3)
+	ent1a = Entry(wrapper2, textvariable=t1a,  width=60)
+	ent1a.grid(row=1, column=4, padx=5, pady=3)
+
+	lbl1b = Label(wrapper2, text="Poll Location")
+	lbl1b.grid(row=2, column=3, padx=5, pady=3)
+	ent1b = Entry(wrapper2, textvariable=t1b,  width=60)
+	ent1b.grid(row=2, column=4, padx=5, pady=3)
+
+	lbl2 = Label(wrapper2, text="Form No")
 	lbl2.grid(row=1, column=0, padx=5, pady=3)
-	ent2 = Entry(wrapper3, textvariable=t2)
+	ent2 = Entry(wrapper2, textvariable=t2)
 	ent2.grid(row=1, column=1, padx=5, pady=3)
+
+	lbl3 = Label(wrapper2, text="Municipality")
+	lbl3.grid(row=2, column=0, padx=5, pady=3)
+	ent3 = Entry(wrapper2, textvariable=t3, state="disabled")
+	ent3.grid(row=2, column=1, padx=5, pady=3)
 	# ent2.place(x=78, y=30, width=200) #width in pixels
 
-	lbl3 = Label(wrapper3, text="Last Name")
-	lbl3.grid(row=2, column=0, padx=5, pady=3)
-	ent3 = Entry(wrapper3, textvariable=t3)
-	ent3.grid(row=2, column=1, padx=5, pady=3)
+	lbl4 = Label(wrapper2, text="Ward")
+	lbl4.grid(row=3, column=0, padx=5, pady=3)
+	ent4 = Entry(wrapper2, textvariable=t4, state="disabled")
+	ent4.grid(row=3, column=1, padx=5, pady=3)
+
+	lbl5 = Label(wrapper2, text="District")
+	lbl5.grid(row=4, column=0, padx=5, pady=3)
+	ent5 = Entry(wrapper2, textvariable=t5, state="disabled")
+	ent5.grid(row=4, column=1, padx=5, pady=3)
+
 
 	# Buttons
-	add_btn = Button(wrapper3, text="Add New", command=add_new)
-	up_btn = Button(wrapper3, text="Update", command=update_data)
-	delete_btn = Button(wrapper3, text="Delete", command=delete_row)
+	add_btn = Button(wrapper2, text="Add New", command=add_new)
+	up_btn = Button(wrapper2, text="Update", command=update_data)
+	delete_btn = Button(wrapper2, text="Delete", command=delete_row)
 
-	add_btn.grid(row=3, column=0, padx=2, pady=1)
-	up_btn.grid(row=3, column=1, padx=2, pady=1)
-	delete_btn.grid(row=3, column=2, padx=2, pady=1)
-
-
-
-def reset_run_frame(frame_opt):
-	hide_menu_frames()
-	frame_opt.pack(fill="both", expand=1)
-
-
-# Hide Frame Function
-def hide_menu_frames():
-	# Destroy the children widgets in each frame
-	for widget in new_frame.winfo_children():
-		widget.destroy()
-	for widget in open_frame.winfo_children():
-		widget.destroy()
-	for widget in start_frame.winfo_children():
-		widget.destroy()
-
-	# Hide all frames
-	new_frame.pack_forget()
-	open_frame.pack_forget()
-	start_frame.pack_forget()
-
-# Logged in
-def logged_in():
-	hide_menu_frames()
-	start_frame.pack(fill="both", expand=1)
-	start_label = Label(start_frame, text="Election Poll Books", font=("Helvetica", 18)).pack(pady=40)
-	restore_menu()
-
+	add_btn.grid(row=7, column=0, padx=2, pady=1)
+	up_btn.grid(row=7, column=1, padx=2, pady=1)
+	delete_btn.grid(row=7, column=2, padx=2, pady=1)
 
 # Start Screen
 def home():
@@ -248,6 +300,28 @@ def home():
 	submit_btn = Button(start_frame, text='Submit', width=12, command=login).pack(pady=10)
 	remove_menu()
 
+def reset_run_frame(frame_opt):
+	hide_menu_frames()
+	frame_opt.pack(fill="both", expand=1)
+
+# Hide Frame Function
+def hide_menu_frames():
+	# Destroy the children widgets in each frame
+	for widget in new_frame.winfo_children():
+		widget.destroy()
+	for widget in open_frame.winfo_children():
+		widget.destroy()
+	for widget in start_frame.winfo_children():
+		widget.destroy()
+	for widget in mwdForm_frame.winfo_children():
+		widget.destroy()
+
+	# Hide all frames
+	new_frame.pack_forget()
+	open_frame.pack_forget()
+	start_frame.pack_forget()
+	mwdForm_frame.pack_forget()
+
 def remove_menu():
     emptyMenu = Menu(root)
     root.config(menu=emptyMenu)
@@ -255,82 +329,109 @@ def remove_menu():
 def restore_menu():    
 	root.config(menu=my_menu)
 
-#Form Validation
-def new_file_validation():
-	print(mycombo.current())
-	error_mess = ''
-	if  mycombo.current() == 0:
-		error_mess += f"\nAccount not selected. Please select one to continue.\n"
-
-	if project_name.get() =='':
-		error_mess += f"\nProject Name empty and is required\n"
-
-	if project_name.get() !='':
-		table_name = project_name.get()
-		chk_name = table_name.replace(' ', '_')
-		table_exists = db.check_table_exists(chk_name)
-		if table_exists == 1:
-			error_mess = f"Project name is aready taken. Please select another name."
-			project_name.delete(0, END) #deletes the current value
-
-	return error_mess
-
-#################
-# 
-#################
-# functions
+#============================= Funtions  ======================================================
 def update(rows):
 	trv.delete(*trv.get_children())
 	for i in rows:
-		trv.insert("","end", values=i)
+		trv.insert('', 'end', values=i)
 
-def search():
-	pass
+def search(muni=None):
+	if muni == None or muni =='All...':
+		clear()
+	else:
+		q2 = muni.upper()
+		rows = db.fetch_mwd(q2)
+		update(rows)
 
 def clear():
-	# clear_inputs()	
-	table_name ='test'
-	rows = db.fetch_voters(table_name)
+	clear_inputs()	
+	rows = db.fetch_mwd()
 	update(rows)
 
 def clear_inputs():
-	pass
+	t1.set(' ')
+	t2.set(' ')
+	t3.set(' ')		
+	t4.set(' ')		
+	t5.set(' ')		
 
 def getrow(event):
-	pass
-
-	# rowid = trv.identify_row(event.y)
-	# item = trv.item(trv.focus())
-	# t1.set(item['values'][0])
-	# t2.set(item['values'][1])
-	# t3.set(item['values'][2])		
-	# t4.set(item['values'][3])		
-	# t5.set(item['values'][4])
+	rowid = trv.identify_row(event.y)
+	item = trv.item(trv.focus())
+	t1.set(item['values'][0])
+	t2.set(item['values'][1])
+	t3.set(item['values'][2])		
+	t4.set(item['values'][3])		
+	t5.set(item['values'][4])		
 
 def update_data():
-	pass
+	rec_id = t1.get()
+	form_no = t2.get()
+	muni = t3.get()
+
+	query = f"UPDATE form_master SET form_no = {form_no} WHERE id = {rec_id}"
+	db.run_query(query)
+	search(muni)
 
 def add_new():
 	pass
 
+	# fname = t2.get()
+	# lname = t3.get()
+
+	# query = "INSERT INTO users(id, first_name, last_name) VALUES(NULL, %s, %s)"
+	# cursor.execute(query, (fname, lname))
+	# db.commit()	
+	# clear()
+
 def delete_row():
 	pass
 
-def export_csv():
-	pass
+	# rec_id = t1.get()	
+	# if messagebox.askyesno("Confirm Delete","Are You sure you want to delete this record?"):
+	# 	query = "DELETE FROM test WHERE id="+rec_id
+	# 	cursor.execute(query)
+	# 	db.commit()
+	# 	clear()
+	# else:
+	# 	return True
 
-def import_data():
-	pass
+## Combobox - Select Dropdown
+def fetch_municipalies():
+	rows = db.fetch_clients()
+
+	options = ['All...']
+	for row in rows:
+		options.append(f"{row[1]}")
+	return options
+
+def get_municipality(event):
+	muni = mycombo.get()
+	search(muni)
+
+## List box functions
+def delete_one():
+	my_listbox.delete(ANCHOR)
+
+def delete_all():
+	my_listbox.delete(0, END)  # "end"
+
+def select_show():
+	my_label.config(text=my_listbox.get(ANCHOR))		
+
+def select_all():
+	result = ''
+	for item in my_listbox.curselection():
+		result = result + mylistbox(item) +'\n'
+
+	print(result)		
+
+def delete_multiple():
+	for item in reverse(my_listbox.curselection()):
+		my_listbox.delete(item)
 
 # sys.exit(f"Quit App.............")
-def get_attributes(widget):
-	widg = widget
-	keys = widg.keys()
-	for key in keys:
-		print("Attribute: {:<20}".format(key), end=' ')
-		value = widg[key]
-		vtype = type(value)
-		print('Type: {:<30} Value: {}'.format(str(vtype), value))
+
 
 
 
@@ -355,19 +456,23 @@ positionDown = int(root.winfo_screenheight()/3 - windowHeight/2)
 root.geometry("+{}+{}".format(positionRight, positionDown))
 # root.iconbitmap('c:/guis/exe/codemy.ico')
 
-##################
-# global options #
-##################
 project_name = StringVar()
 password = StringVar()
 username = StringVar()
 opts = StringVar()
 options = []
 
+# Init varaibles
 q = StringVar()
 t1 = StringVar()
+t1a = StringVar()
+t1b = StringVar()
+t1c = StringVar()
+
 t2 = StringVar()
 t3 = StringVar()
+t4 = StringVar()
+t5 = StringVar()
 
 #Define Main Menu
 my_menu = Menu(root)
@@ -398,6 +503,7 @@ print_menu.add_command(label="Exit", command=root.quit)
 new_frame = Frame(root) #, highlightbackground="black", highlightthickness=1
 open_frame = Frame(root)
 start_frame = Frame(root)
+mwdForm_frame = Frame(root)
 
 # Show the start screen
 home()

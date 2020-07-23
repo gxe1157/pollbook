@@ -20,7 +20,6 @@ else:
 	db = mysql.connector.connect(host="localhost", user="root", password="", database="njpob", auth_plugin="")
 	cursor = db.cursor()
 
-
 # functions
 def check_table_form_master(table_name):
 	#get the count of tables with the name
@@ -120,6 +119,7 @@ def delete_row():
 
 ## Combobox - Select Dropdown
 def fetch_municipalies():
+	''' Create lookup table by municipalities with counts by districts '''
 	check_table_form_master('form_master')
 	query = "SELECT id, municipality FROM form_master GROUP BY municipality ORDER BY municipality"
 	cursor.execute(query)

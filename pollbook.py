@@ -160,11 +160,10 @@ def open_file():
 	my_flash = Label(open_frame, text=f"{text_mess}", font=("helvetica", 14))
 	my_flash.pack(pady=5)
 
-
 	# Create Section Frames
-	wrapper1 = LabelFrame(root, text="Dispaly List")
-	wrapper2 = LabelFrame(root, text="Customer Data")
-	wrapper3 = LabelFrame(root, text="Select Items for Update")
+	wrapper1 = LabelFrame(open_frame, text="Dispaly List")
+	wrapper2 = LabelFrame(open_frame, text="Customer Data")
+	wrapper3 = LabelFrame(open_frame, text="Select Items for Update")
 
 	wrapper1.pack(fill="both", expand="yes", padx="20", pady="10")
 	wrapper2.pack(fill="both", expand="yes", padx="20", pady="10")
@@ -489,14 +488,14 @@ poll_menu.add_separator()
 poll_menu.add_command(label="Exit", command=root.quit)
 
 # Create menu items
-print_menu = Menu(my_menu, tearoff=0)
-my_menu.add_cascade(label="Print Files", menu=print_menu)
-print_menu.add_command(label="New Poll Book", command=lambda: new_file())
-print_menu.add_command(label="Open Poll Book", command=lambda: open_file())
-print_menu.add_separator()
-print_menu.add_command(label="Close Files", command=lambda: logged_in())
-print_menu.add_separator()
-print_menu.add_command(label="Exit", command=root.quit)
+# print_menu = Menu(my_menu, tearoff=0)
+# my_menu.add_cascade(label="Print Files", menu=print_menu)
+# print_menu.add_command(label="New Poll Book", command=lambda: new_file())
+# print_menu.add_command(label="Open Poll Book", command=lambda: open_file())
+# print_menu.add_separator()
+# print_menu.add_command(label="Close Files", command=lambda: logged_in())
+# print_menu.add_separator()
+# print_menu.add_command(label="Exit", command=root.quit)
 
 
 # Create Math Frames

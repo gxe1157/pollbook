@@ -153,6 +153,8 @@ def new_file():
 
 # Open Poll Book
 def open_file():
+	open_directory();
+
 	reset_run_frame(open_frame)
 
 	# Page Header 
@@ -163,7 +165,7 @@ def open_file():
 	# Create Section Frames
 	wrapper1 = LabelFrame(open_frame, text="Dispaly List")
 	wrapper2 = LabelFrame(open_frame, text="Customer Data")
-	wrapper3 = LabelFrame(open_frame, text="Select Items for Update")
+	wrapper3 = LabelFrame(open_frame, text="Update Activity")
 
 	wrapper1.pack(fill="both", expand="yes", padx="20", pady="10")
 	wrapper2.pack(fill="both", expand="yes", padx="20", pady="10")
@@ -228,8 +230,10 @@ def open_file():
 	my_listbox.insert(END, "This is an item9")
 	my_listbox.insert(END, "This is an item10")
 
-	# Clear and display default records
-	clear()
+	
+	#========================== Select a job number and display default records =======================
+	# clear()
+
 
 	# Data User Frame
 	# Input Fields
@@ -454,6 +458,14 @@ positionDown = int(root.winfo_screenheight()/3 - windowHeight/2)
 # Positions the window in the center of the page.
 root.geometry("+{}+{}".format(positionRight, positionDown))
 # root.iconbitmap('c:/guis/exe/codemy.ico')
+
+def open_directory(takefocus=True, aboveThis=None):
+	top = Toplevel()
+	top.title('window 2')
+	top.geometry("400x300")
+	top.geometry("+{}+{}".format(positionRight, positionDown))
+	bnt2 = Button(top, text="close", command=top.destroy).pack(pady=10)
+
 
 project_name = StringVar()
 password = StringVar()

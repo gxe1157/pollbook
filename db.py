@@ -54,11 +54,11 @@ class Database:
         rows = self.cur.fetchall()
         return rows
 
-    def fetch_voters(self, table_name):
-        query = "SELECT municipality, ward, district FROM "+table_name+" ORDER BY municipality, ward, district"        
-        self.cur.execute(query)
-        rows = self.cur.fetchall()
-        return rows
+    # def fetch_voters(self, table_name):
+    #     query = "SELECT municipality, ward, district FROM "+table_name+" ORDER BY municipality, ward, district"        
+    #     self.cur.execute(query)
+    #     rows = self.cur.fetchall()
+    #     return rows
 
     def confirm_login(self, username, password):
         print('fetch_customers..............')

@@ -459,11 +459,12 @@ positionDown = int(root.winfo_screenheight()/3 - windowHeight/2)
 root.geometry("+{}+{}".format(positionRight, positionDown))
 # root.iconbitmap('c:/guis/exe/codemy.ico')
 
-def open_directory(takefocus=True, aboveThis=None):
+def open_directory():
 	top = Toplevel()
 	top.title('window 2')
 	top.geometry("400x300")
 	top.geometry("+{}+{}".format(positionRight, positionDown))
+	top.grab_set()  #.grab_release() # to return to normal
 	bnt2 = Button(top, text="close", command=top.destroy).pack(pady=10)
 
 

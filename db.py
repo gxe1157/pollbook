@@ -82,10 +82,8 @@ class Database:
     #     return rows
 
     def confirm_login(self, username, password):
-        print('fetch_customers..............')
         self.cur.execute("SELECT * FROM users where username='"+username+"' and password='"+password+"'")
         rows = self.cur.fetchone()
-        print(rows)
         return rows
 
     def csv_to_sqlite(self, csv_file_name, progress_bar, percent, messagebox, table_name):
@@ -178,7 +176,6 @@ class Database:
         return form_table_name    
 
     def fetch_clients(self, table_name):
-        print('fetch_clients - table_name', table_name)        
         form_table_name = self.check_table_form_master(table_name)        
         query = f"SELECT id, municipality FROM {form_table_name} GROUP BY municipality ORDER BY municipality"
         rows = self.cur.execute(query)
@@ -205,7 +202,7 @@ class Database:
         # query = UPDATE products SET Qty=100,product_name='CAD' WHERE product_id = 102
 
     def run_query(self, query):
-        print(query)
+        # print(query)
         self.cur.execute(query)
         self.conn.commit()        
 
@@ -225,9 +222,6 @@ class Database:
         file = open(csv_file_name)
         reader = csv.reader(file)
         lines= len(list(reader))
-
-        print( f"This is the number of lines in the file: {lines}") 
-        # sys.exit(f"Last record: Done..............")
         return lines                
 
     def _create_table(self, headers, table_name):

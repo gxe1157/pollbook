@@ -176,7 +176,6 @@ def show_page(header_text):
 
 		for dy in range(year, year+5):
 			options.append(dy)
-		print(options)
 		return options
 
 	def get_cust_selected(event):
@@ -567,8 +566,6 @@ def select_all():
 	for item in my_listbox.curselection():
 		result = result + mylistbox(item) +'\n'
 
-	print(result)		
-
 def delete_multiple():
 	for item in reverse(my_listbox.curselection()):
 		my_listbox.delete(item)
@@ -587,7 +584,7 @@ root.geometry("800x700")
 # Gets the requested values of the height and widht.
 windowWidth = root.winfo_reqwidth()
 windowHeight = root.winfo_reqheight()
-print("Width",windowWidth,"Height",windowHeight)
+# print("Width",windowWidth,"Height",windowHeight)
  
 # Gets both half the screen width/height and window width/height
 positionRight = int(root.winfo_screenwidth()/3 - windowWidth/2)

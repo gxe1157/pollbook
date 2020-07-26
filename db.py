@@ -1,4 +1,4 @@
-import sqlite3, csv, time, sys
+import sqlite3, csv, time, sys, datetime
 #select municipality, ward, district, count(district) as ctn from test group by municipality, ward, district order by municipality, ward, district
 
 class Database:
@@ -117,7 +117,11 @@ class Database:
                         number_columns = len( build_placeHolder.split(",") )
                         record_number +=1 # This is an adjustment so to counts matched record id                       
                     else:
-                        # print(f"CSV Imported rows {record_number} = {total_rows} -> {csv_row[0]}")                        
+                        #===== Additional Fields needed for internal use =====================
+                        csv_row.append(0)                       # form_no field
+                        csv_row.append(datetime.datetime.now()) #  create_dt timestamp field
+                        #===== Additional Fields needed for internal use =====================
+
                         if number_columns == len(csv_row):
                             self._insert_record(build_placeHolder, csv_row, table_name)
                         else:
@@ -171,7 +175,7 @@ class Database:
                 ward = row[1]
                 district = row[2]
                 dcount = row[3]
-                self.cur.execute("INSERT INTO "+form_table_name+" VALUES (?, ?, ?, ?, ?, ?)", (None, None, municipality, ward, district, dcount))
+                self.cur.execute("INSERT INTO "+form_table_name+" VALUES (?, ?, ?, ?, ?, ?)", (None, 0, municipality, ward, district, dcount))
             self.conn.commit()
         return form_table_name    
 
@@ -202,7 +206,7 @@ class Database:
         # query = UPDATE products SET Qty=100,product_name='CAD' WHERE product_id = 102
 
     def run_query(self, query):
-        # print(query)
+        print(query)
         self.cur.execute(query)
         self.conn.commit()        
 
@@ -232,6 +236,13 @@ class Database:
             fieldType = 'TEXT'
             build_tableSchema +=  fld_name+' '+fieldType+','
             build_placeHolder += '?,'            
+
+        #================= Additional Fields needed for internal use =================
+        build_tableSchema +=  'form_no interger,'
+        build_placeHolder += '?,'            
+        build_tableSchema +=  'create_dt timestamp,'  #datetime.datetime.now()
+        build_placeHolder += '?,'            
+        
 
         build_tableSchema = build_tableSchema[:-1]
         query = "CREATE TABLE IF NOT EXISTS "+table_name+" ( "+build_tableSchema+")"     

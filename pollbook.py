@@ -5,6 +5,7 @@ from tkinter import ttk
 from tkinter import messagebox
 from random import randint
 from tkinter import filedialog
+from tkinter import Widget
 import datetime
 import os, sys
 
@@ -345,17 +346,9 @@ def open_file():
 	wrapper3.pack()
 
 	my_listbox.pack(pady=5)
+	for i in range(8):
+		my_listbox.insert(END, f"This is an item {i}" )
 
-	my_listbox.insert(END, "This is an item1")
-	my_listbox.insert(END, "This is an item2")
-	my_listbox.insert(END, "This is an item3")
-	my_listbox.insert(END, "This is an item4")
-	my_listbox.insert(END, "This is an item5")
-	my_listbox.insert(END, "This is an item6")
-	my_listbox.insert(END, "This is an item7")
-	my_listbox.insert(END, "This is an item8")
-	my_listbox.insert(END, "This is an item9")
-	my_listbox.insert(END, "This is an item10")
 
 	
 	#========================== Select a job number and display default records =======================
@@ -369,19 +362,26 @@ def open_file():
 	ent1 = Entry(wrapper2, textvariable=t1, state="disabled")
 	ent1.grid(row=0, column=1, padx=5, pady=3)
 
+	global ent1a
 	lbl1a = Label(wrapper2, text="Poll Name")
 	lbl1a.grid(row=1, column=3, padx=5, pady=3)
-	ent1a = Entry(wrapper2, textvariable=t1a,  width=60)
+	ent1a = Entry(wrapper2, textvariable=t1a,  width=60, state="disabled")
 	ent1a.grid(row=1, column=4, padx=5, pady=3)
-
+	global ent1b
 	lbl1b = Label(wrapper2, text="Poll Location")
 	lbl1b.grid(row=2, column=3, padx=5, pady=3)
-	ent1b = Entry(wrapper2, textvariable=t1b,  width=60)
+	ent1b = Entry(wrapper2, textvariable=t1b,  width=60, state="disabled")
 	ent1b.grid(row=2, column=4, padx=5, pady=3)
+	global ent1c
+	lbl1c = Label(wrapper2, text="Poll Address")
+	lbl1c.grid(row=3, column=3, padx=5, pady=3)
+	ent1c = Entry(wrapper2, textvariable=t1c,  width=60, state="disabled")
+	ent1c.grid(row=3, column=4, padx=5, pady=3)
 
+	global ent2
 	lbl2 = Label(wrapper2, text="Form No")
 	lbl2.grid(row=1, column=0, padx=5, pady=3)
-	ent2 = Entry(wrapper2, textvariable=t2)
+	ent2 = Entry(wrapper2, textvariable=t2, state="disabled")
 	ent2.grid(row=1, column=1, padx=5, pady=3)
 
 	lbl3 = Label(wrapper2, text="Municipality")
@@ -400,15 +400,11 @@ def open_file():
 	ent5 = Entry(wrapper2, textvariable=t5, state="disabled")
 	ent5.grid(row=4, column=1, padx=5, pady=3)
 
-
 	# Buttons
-	add_btn = Button(wrapper2, text="Add New", command=add_new)
-	up_btn = Button(wrapper2, text="Update", command=update_data)
-	delete_btn = Button(wrapper2, text="Delete", command=delete_row)
-
-	add_btn.grid(row=7, column=0, padx=2, pady=1)
+	up_btn = Button(wrapper2, text="Update", command=lambda: update_data(ent2))
 	up_btn.grid(row=7, column=1, padx=2, pady=1)
-	delete_btn.grid(row=7, column=2, padx=2, pady=1)
+	up_btn = Button(wrapper2, text="Update Poll Info", command=update_poll_info)
+	up_btn.grid(row=7, column=4, padx=2, pady=1)
 
 # Start Screen
 def home():
@@ -477,68 +473,83 @@ def search(muni=None):
 	if muni == None or muni =='All...':
 		clear()
 	else:
-		sql_file = selected_table # This is global
 		q2 = muni.upper()
-		rows = db.fetch_mwd(sql_file, q2)
+		rows = db.fetch_mwd(selected_table, q2) # This is global
 		update(rows)
 
 def clear():
-	sql_file = selected_table # This is global	
-
 	clear_inputs()	
-	rows = db.fetch_mwd(sql_file)
+	rows = db.fetch_mwd(selected_table) # This is global	
 	update(rows)
 
 def clear_inputs():
+	# enable these inputs fields
+	# ent2.config(state="normal")			
+	# ent1a.config(state="normal")			
+	# ent1b.config(state="normal")			
+	# ent1c.config(state="normal")			
+
 	t1.set(' ')
 	t2.set(' ')
 	t3.set(' ')		
 	t4.set(' ')		
 	t5.set(' ')		
 
+	t1a.set(' ')
+	t1b.set(' ')
+	t1c.set(' ')		
+
+
 def getrow(event):
 	rowid = trv.identify_row(event.y)
 	item = trv.item(trv.focus())
+
+	# enable these inputs fields
+	ent2.config(state="normal")			
+	ent1a.config(state="normal")			
+	ent1b.config(state="normal")			
+	ent1c.config(state="normal")			
+
 	t1.set(item['values'][0])
 	t2.set(item['values'][1])
 	t3.set(item['values'][2])		
 	t4.set(item['values'][3])		
 	t5.set(item['values'][4])		
 
-def update_data():
+def update_data(ent2):
+	ent2.config(state="disabled")				
+	# sys.exit("quit..............")
 	sql_file = selected_table+"_fm" # This is global		
 	rec_id = t1.get()
 	form_no = t2.get()
-	muni = t3.get()
+	muni= t3.get()
 
 	query = f"UPDATE {sql_file} SET form_no = {form_no} WHERE id = {rec_id}"
 	db.run_query(query)
 
-
+	# disable entry field
+	ent2.config(state="disabled")					
 	search(muni)
 
-def add_new():
-	pass
+def update_poll_info():
+	data={}
+	sql_file = selected_table+"_fm" # This is global		
+	rec_id = t1.get()
+	data['poll_name'] = t1a.get()
+	data['poll_location'] = t1b.get()
+	data['poll_address'] = t1c.get()		
 
-	# fname = t2.get()
-	# lname = t3.get()
+	set_flds = ' SET '
+	for key, value in data.items():
+		set_flds += f"{key} ='{value}',  "
 
-	# query = "INSERT INTO users(id, first_name, last_name) VALUES(NULL, %s, %s)"
-	# cursor.execute(query, (fname, lname))
-	# db.commit()	
-	# clear()
+	# set_flds = f"poll_name = {poll_name}, poll_location = {poll_location}, poll_address = {poll_address}"
+	query = f"UPDATE {sql_file} SET {set_flds} WHERE id = {rec_id}"
+	print('poll update query: ', query)
 
-def delete_row():
-	pass
+	# db.run_query(query)
+	# search(muni)
 
-	# rec_id = t1.get()	
-	# if messagebox.askyesno("Confirm Delete","Are You sure you want to delete this record?"):
-	# 	query = "DELETE FROM test WHERE id="+rec_id
-	# 	cursor.execute(query)
-	# 	db.commit()
-	# 	clear()
-	# else:
-	# 	return True
 
 ## Combobox - Select Dropdown
 def fetch_municipalies():

@@ -5,12 +5,17 @@ from tkinter import ttk
 from tkinter import messagebox
 from random import randint
 from tkinter import filedialog
+import datetime
 import os, sys
 
 
 from db import Database
 db = Database('pollbook.db')
 
+#========== declare global here =============
+muni_list = {}
+months = ['---','Jan', 'Feb', 'Mar', 'Apr', 'May', 'June', 'July', 'Aug', 'Sept', 'Oct', 'Nov', 'Dec']
+selected_table = ''
 
 #============================= Frame options start ==============================================
 # Login
@@ -39,41 +44,55 @@ def logged_in():
 
 # Create Poll Book
 def new_file():
+	remove_menu()
 	reset_run_frame(new_frame)
 	muni_list={}
 	#======================= Inner functions ===================================================
-	#Browse dir
+	#Get file to import
 	def dir_browse():
-		resp = new_file_validation() 
+		resp, prj_name = new_file_validation() 
 		if resp != '':
 			messagebox.showerror("Validation Error:", resp)
 			return
 
-		csv_file_name =  filedialog.askopenfilename(initialdir = "/",title = "Select file",filetypes = (("all files","*.*"),("jpeg files","*.jpg")))
-		if csv_file_name != "":
-			import_file(csv_file_name)
-		else:
-			return
+		f = f"{prj_name}. Continue or Cancel?"	
+		if messagebox.askokcancel("Please Confirm:", f'{f} '):
+			csv_file_name =  filedialog.askopenfilename(initialdir = "/",title = "Select file",filetypes = (("all files","*.*"),("jpeg files","*.jpg")))
+			if csv_file_name != "":
+				import_file(csv_file_name)
+
+		return
 
 	#Form Validation
 	def new_file_validation():
-		print(client_combo.current())
+		project_name.config(state=NORMAL)			
+
 		error_mess = ''
 		if  client_combo.current() == 0:
 			error_mess += f"\nAccount not selected. Please select one to continue.\n"
 
-		if project_name.get() =='':
-			error_mess += f"\nProject Name empty and is required\n"
+		if  event_combo.current() == 0:
+			error_mess += f"\nEvent not selected. Please select one to continue.\n"
 
-		if project_name.get() !='':
-			table_name = project_name.get()
-			chk_name = table_name.replace(' ', '_')
-			table_exists = db.check_table_exists(chk_name)
-			if table_exists == 1:
-				error_mess = f"Project name is aready taken. Please select another name."
-				project_name.delete(0, END) #deletes the current value
+		if  event_dt_month_combo.current() == 0:
+			error_mess += f"\nMonth not selected. Please select one to continue.\n"
 
-		return error_mess
+		table_name = client_combo.get()+' '+event_combo.get()+' '+event_dt_month_combo.get()+' '+event_dt_year_combo.get()
+		chk_name = table_name.replace(' ', '_')
+		print('table_name:', chk_name);
+
+		table_exists = db.check_table_exists(chk_name)
+
+		if table_exists == 1:
+			project_name.insert(END, table_name)
+			error_mess = f"Project name {table_name} is aready taken.\nPlease select another name."
+			project_name.delete(0, END) #deletes the current value
+		else:
+			project_name.insert(END, table_name)
+
+		project_name.config(state=DISABLED)		
+		return (error_mess, project_name.get())
+
 
 	# Create Popup function
 	def import_file(csv_file_name):
@@ -96,65 +115,175 @@ def new_file():
 			resp = db.csv_to_sqlite(csv_file_name, progress_bar, percent, messagebox, table_name)
 			if resp == False:
 				new_file() # return	display results
-			else:											
+			else:						
+				global selected_table
+				selected_table = table_name
 				open_file()
-
 		else:
 			new_file() # return	display results		
 
-	def get_cust_list():
-		print(muni_list);
+	header_text = "Create New Pollbook: Import New File."
+	show_page(header_text)		
 
+	# Buttons
+	buttonframe = Frame(new_frame)
+	buttonframe.pack(pady=20)
+
+	button1 = Button(buttonframe, text='Return', width=12, command=logged_in)
+	button1.pack( side = LEFT)
+
+	button2 = Button(buttonframe, text='Clear Fields', width=12, command=new_file)
+	button2.pack( side = LEFT )
+
+	button3 = Button(buttonframe, text='Get File', width=12, command=dir_browse)
+	button3.pack( side = LEFT )
+
+
+def get_file():
+	remove_menu()	
+	reset_run_frame(new_frame)
+	muni_list={}
+
+	header_text = "Pollbook Lookup:"
+	show_page(header_text)
+	# Buttons
+	buttonframe = Frame(new_frame)
+	buttonframe.pack(pady=20)
+
+	button1 = Button(buttonframe, text='Return', width=12, command=logged_in)
+	button1.pack( side = LEFT)
+
+	button2 = Button(buttonframe, text='Clear Fields', width=12, command=get_file)
+	button2.pack( side = LEFT )
+
+def show_page(header_text):
+	#======================= Inner functions ===================================================
+	def get_cust_list():
 		results = db.fetch_all('customers')
 		options = ['Please Select....']
 		for row in results:
 			options.append(row[1])
 			muni_list[row[1]] = row[0]
-
-		print(muni_list);			
 		return options
 
-	def get_cust_data(event):
-		print('get directory path')
-		print(muni_list);					
-		return True
+	def get_event_data():
+		results = db.fetch_all('election_events')
+		options = ['Please Select....']
+		for row in results:
+			options.append(row[1])
+		return options
 
-		# print(client_combo.get())
-		# option = client_combo.get()
-		# id = option.split("-")[0]
-		# db.fetch_by_id(id, 'customers')
-		# for i in rows:
-		# 	customer.set(i[1])
-		# 	contact.set(i[2])
+	def get_event_dt(year):
+		options= []
+
+		for dy in range(year, year+5):
+			options.append(dy)
+		print(options)
+		return options
+
+	def get_cust_selected(event):
+		option = client_combo.get()
+		try:
+			if listbox_jobs.winfo_exists():
+				listbox_jobs_update(option)
+		except:
+			pass
 
 	# Page Header 
-	text_mess = "Create New Pollbook: Import New File."
-	my_flash = Label(new_frame, text=f"{text_mess}", font=("helvetica", 14))
+	my_flash = Label(new_frame, text=f"{header_text}", font=("helvetica", 14))
 	my_flash.pack(pady=10)
-
-	# Get Inputs
-	options = get_cust_list();
 	project_account_lbl = Label(new_frame, text='Account', font=("helvetica", 12)).pack(pady=10)
 
 	global client_combo
-	client_combo = ttk.Combobox(new_frame, textvariable=opts, width=30, font=("helvetica", 12))	
-	client_combo['values'] = options
+	client_combo = ttk.Combobox(new_frame, width=20, font=("helvetica", 12))	
+	client_combo['values'] = get_cust_list()
 	client_combo.pack(padx=10, pady=6)
 	client_combo.current(0)
-	client_combo.bind("<<ComboboxSelected>>", get_cust_data )    
+	client_combo.bind("<<ComboboxSelected>>", get_cust_selected )    
 
 	global project_name 
-	project_name_lbl = Label(new_frame, text="Project Name", font=("helvetica", 12)).pack(pady=10)	
-	project_name = Entry(new_frame, font=("helvetica", 12))
-	project_name.pack(ipadx=100, ipady=5)
+	project_name_lbl = Label(new_frame, text="Project Name", font=("helvetica", 12))	
+	project_event_lbl = Label(new_frame, text="Event Name", font=("helvetica", 12))	
+	project_date_lbl = Label(new_frame, text="Event Date", font=("helvetica", 12))	
 
-	# Buttons
-	add_btn = Button(new_frame, text='Get File', width=12, command=dir_browse).pack(pady=10)
+	if header_text == "Pollbook Lookup:":
+		jobs_listbox()
+	else:
+		project_event_lbl.pack(pady=10)
+		global event_combo
+		event_combo = ttk.Combobox(new_frame, width=20, font=("helvetica", 12))	
+		event_combo['values'] = get_event_data()
+		event_combo.pack(padx=10, pady=6)
+		event_combo.current(0)
+
+
+		project_date_lbl.pack(pady=10)
+
+		comboframe = Frame(new_frame)
+		comboframe.pack()
+
+		global event_dt_month_combo
+		event_dt_month_combo = ttk.Combobox(comboframe, width=6, font=("helvetica", 12))	
+		event_dt_month_combo['values'] = months
+		event_dt_month_combo.pack( side=LEFT, padx=5)
+		event_dt_month_combo.current(0)
+
+		global event_dt_year_combo
+		year = datetime.datetime.today().year		
+		event_dt_year_combo = ttk.Combobox(comboframe, width=6, font=("helvetica", 12))	
+		event_dt_year_combo['values'] = get_event_dt(year)
+		event_dt_year_combo.pack( side=LEFT )
+		event_dt_year_combo.current(0)
+
+		project_name_lbl.pack(pady=10)	
+		project_name = Entry(new_frame, font=("helvetica", 12))
+		project_name.pack(ipadx=80, ipady=5)
+		project_name.config(state=DISABLED)				
+
+
+
+def jobs_listbox():
+	wrapper_listbox_jobs = Frame(new_frame, relief="raised" )
+	wrapper_listbox_jobs.pack(fill="none", expand="no", padx="10", pady="5")
+	#Scrollbar
+	scrollbar_jobs = Scrollbar(wrapper_listbox_jobs, orient=VERTICAL)
+	#list Box - SINGLE, BROWSE, MULTIPLE, EXTENED
+	global listbox_jobs
+	listbox_jobs = Listbox(wrapper_listbox_jobs, width=65, yscrollcommand=scrollbar_jobs.set)
+	scrollbar_jobs.config(command=listbox_jobs.yview) 		#scrollbar configure
+	scrollbar_jobs.pack(side=RIGHT, fill=Y)
+	wrapper_listbox_jobs.pack()
+	listbox_jobs.pack()
+	listbox_jobs.bind('<<ListboxSelect>>', listbox_jobs_select) 	# Bind select
+
+def listbox_jobs_select(event):
+	try:
+		global selected_table
+		selected_table = listbox_jobs.get(ANCHOR)
+		response = messagebox.askokcancel("Open SQL File", f'Open File {selected_table} ? ')
+		if response == 1:
+			open_file()
+
+	except IndexError:
+		pass
+
+def listbox_jobs_update(option):	
+	listbox_jobs.delete(0, END)			
+	if option !='Please Select....':
+		results = db.fetch_tables_list()
+		for result in results:
+			chk_str = option.replace(' ', '_') # If 
+			file_name = result[0]
+			if option in file_name and '_fm' not in file_name:
+				# print('found it! '+file_name)
+				listbox_jobs.insert(END, file_name )
+
+		if listbox_jobs.size() == 0:
+			listbox_jobs.insert(END, 'Records not found..........' )
+
 
 # Open Poll Book
 def open_file():
-	open_directory();
-
 	reset_run_frame(open_frame)
 
 	# Page Header 
@@ -232,7 +361,7 @@ def open_file():
 
 	
 	#========================== Select a job number and display default records =======================
-	# clear()
+	clear()
 
 
 	# Data User Frame
@@ -300,7 +429,15 @@ def home():
 	password1.pack(ipadx=100, ipady=5)
 
 	# Buttons
-	submit_btn = Button(start_frame, text='Submit', width=12, command=login).pack(pady=10)
+	buttonframe = Frame(start_frame)
+	buttonframe.pack(pady=20)
+
+	button1 = Button(buttonframe, text='Exit', width=12, command=root.quit)
+	button1.pack( side = LEFT )
+
+	button2 = Button(buttonframe, text='Submit', width=12, command=logged_in)
+	button2.pack( side = LEFT)
+
 	remove_menu()
 
 def reset_run_frame(frame_opt):
@@ -342,13 +479,16 @@ def search(muni=None):
 	if muni == None or muni =='All...':
 		clear()
 	else:
+		sql_file = selected_table # This is global
 		q2 = muni.upper()
-		rows = db.fetch_mwd(q2)
+		rows = db.fetch_mwd(sql_file, q2)
 		update(rows)
 
 def clear():
+	sql_file = selected_table # This is global	
+
 	clear_inputs()	
-	rows = db.fetch_mwd()
+	rows = db.fetch_mwd(sql_file)
 	update(rows)
 
 def clear_inputs():
@@ -368,12 +508,15 @@ def getrow(event):
 	t5.set(item['values'][4])		
 
 def update_data():
+	sql_file = selected_table+"_fm" # This is global		
 	rec_id = t1.get()
 	form_no = t2.get()
 	muni = t3.get()
 
-	query = f"UPDATE form_master SET form_no = {form_no} WHERE id = {rec_id}"
+	query = f"UPDATE {sql_file} SET form_no = {form_no} WHERE id = {rec_id}"
 	db.run_query(query)
+
+
 	search(muni)
 
 def add_new():
@@ -401,7 +544,8 @@ def delete_row():
 
 ## Combobox - Select Dropdown
 def fetch_municipalies():
-	rows = db.fetch_clients()
+	sql_file = selected_table # this is global
+	rows = db.fetch_clients(sql_file)
 
 	options = ['All...']
 	for row in rows:
@@ -434,8 +578,6 @@ def delete_multiple():
 		my_listbox.delete(item)
 
 # sys.exit(f"Quit App.............")
-
-
 
 
 #####################################################
@@ -493,10 +635,8 @@ root.config(menu=my_menu)
 # Create menu items
 poll_menu = Menu(my_menu, tearoff=0)
 my_menu.add_cascade(label="File", menu=poll_menu)
-poll_menu.add_command(label="Create Poll Book", command=lambda: new_file())
-poll_menu.add_command(label="Open Poll Book", command=lambda: open_file())
-poll_menu.add_separator()
-poll_menu.add_command(label="Close Files", command=lambda: logged_in())
+poll_menu.add_command(label="Create Poll Book", command=new_file)
+poll_menu.add_command(label="Open Poll Book", command=get_file)
 poll_menu.add_separator()
 poll_menu.add_command(label="Exit", command=root.quit)
 
@@ -504,9 +644,7 @@ poll_menu.add_command(label="Exit", command=root.quit)
 # print_menu = Menu(my_menu, tearoff=0)
 # my_menu.add_cascade(label="Print Files", menu=print_menu)
 # print_menu.add_command(label="New Poll Book", command=lambda: new_file())
-# print_menu.add_command(label="Open Poll Book", command=lambda: open_file())
-# print_menu.add_separator()
-# print_menu.add_command(label="Close Files", command=lambda: logged_in())
+# print_menu.add_command(label="Open Poll Book", command=lambda: get_file())
 # print_menu.add_separator()
 # print_menu.add_command(label="Exit", command=root.quit)
 

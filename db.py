@@ -7,21 +7,31 @@ class Database:
         self.cur = self.conn.cursor()
 
         self.cur.execute(
-            "CREATE TABLE IF NOT EXISTS customers (id INTEGER PRIMARY KEY, customer text, contact text)")
+            "CREATE TABLE IF NOT EXISTS customers (id INTEGER PRIMARY KEY, abbr_name text, county text, contact text)")
+
+        self.cur.execute(
+            "CREATE TABLE IF NOT EXISTS election_events (id INTEGER PRIMARY KEY, event text)")
 
         self.cur.execute(
             "CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY, username text, password text)")
 
         self.conn.commit()
 
-        # db = Database('pollbook.db')
-        # self.insert_customer("Bergen County", "John Doe")
-        # self.insert_customer("Hudson County", "Mike Henry")
-        # self.insert_customer("Mercer County", "Karen Johnson")
-        # self.insert_customer("Union County", "Karen Johnson")
+        # db -> pollbook.db
+        # self.insert_customer("Bergen", "Bergen County", "Supervisor")
+        # self.insert_customer("Hudson", "Hudson County", "Supervisor")
+        # self.insert_customer("Mercer", "Mercer County", "Supervisor")
+        # self.insert_customer("Union", "Union County", "Supervisor")
+
+        # self.insert_events("Primary")
+        # self.insert_events("General")
+        # self.insert_events("Board of Education")        
+        # self.insert_events("Municipal")
+        # self.insert_events("Municipal Run Off")
 
         # self.insert_user("admin", "admin123")
 
+    #==========  Metadata Queries ======================================    
     def check_table_exists(self, table_name):
         #get the count of tables with the name
         query = "SELECT count(name) FROM sqlite_master WHERE type='table' AND name='" + table_name +"'"
@@ -29,24 +39,34 @@ class Database:
         table_exists = self.cur.fetchone()[0]
         return table_exists    
 
+    def fetch_tables_list(self):
+        self.cur.execute('SELECT name from sqlite_master where type= "table"')
+        rows = self.cur.fetchall()
+        return rows
+
     def __del__(self):
         self.conn.close()
         
+    #==========  Applications Queries ======================================    
+
     def insert_user(self, username, password):
         self.cur.execute("INSERT INTO users VALUES (NULL, ?, ?)",
                          (username, password))
         self.conn.commit()
 
-    def insert_customer(self, customer, contact):
-        self.cur.execute("INSERT INTO customers VALUES (NULL, ?, ?)",
-                         (customer, contact))
+    def insert_customer(self, abbr_name, county, contact):
+        self.cur.execute("INSERT INTO customers VALUES (NULL, ?, ?, ?)",
+                         (abbr_name, county, contact))
+        self.conn.commit()
+
+    def insert_events(self, events):
+        self.cur.execute("INSERT INTO election_events VALUES (NULL, ?)", (events,))
         self.conn.commit()
 
     def fetch_by_id(self, id, table_name):
-        query = "SELECT * FROM "+table_name+"WHERE id='"+id+"'"
+        query = f"SELECT * FROM {table_name} WHERE id='{id}'"
         self.cur.execute(query)
         rows = self.cur.fetchone()
-        print(rows)
         return rows
 
     def fetch_all(self, table_name):
@@ -132,14 +152,17 @@ class Database:
     #=============================================#
     #  
     #=============================================#
-    def check_table_form_master(self, table_name):
+    def check_table_form_master(self, form_table_name, table_name):
         ''' Create lookup table by municipality, ward, district with counts by districts '''
-        table_exists=self.check_table_exists(table_name)        
+        table_exists=self.check_table_exists(form_table_name)        
+
         if table_exists == False:
-            self.cur.execute("CREATE TABLE IF NOT EXISTS "+table_name+" (id INTEGER PRIMARY KEY, form_no integer, municipality text, ward text, district integer, dcount interger)")
+            self.cur.execute("CREATE TABLE IF NOT EXISTS "+form_table_name+" (id INTEGER PRIMARY KEY, form_no integer, municipality text, ward text, district integer, dcount interger)")
             self.conn.commit()
 
-            query = "SELECT municipality, ward, district, count(district) as dcount FROM test GROUP BY municipality, ward, district ORDER BY municipality, ward, district"
+            query = f"SELECT municipality, ward, district, count(district) as dcount FROM {table_name} GROUP BY municipality, ward, district ORDER BY municipality, ward, district"
+            print(query)
+
             self.cur.execute(query)
             rows = self.cur.fetchall()
             for row in rows:
@@ -147,23 +170,41 @@ class Database:
                 ward = row[1]
                 district = row[2]
                 dcount = row[3]
-                self.cur.execute("INSERT INTO "+table_name+" VALUES (?, ?, ?, ?, ?, ?)", (None, None, municipality, ward, district, dcount))
+                self.cur.execute("INSERT INTO "+form_table_name+" VALUES (?, ?, ?, ?, ?, ?)", (None, None, municipality, ward, district, dcount))
             self.conn.commit()
 
-    def fetch_clients(self):
-        self.check_table_form_master('form_master')        
-        query = "SELECT id, municipality FROM form_master GROUP BY municipality ORDER BY municipality"
+    def update_mwd(self, data, table_name ):
+        print(data);
+        set_flds = ' SET '
+        for key, value in data.items():
+            set_flds += f"{key} = {value},  "
+
+        print(set_flds)        
+
+        sys.exit('quit...................')
+        # query = UPDATE products SET Qty=100,product_name='CAD' WHERE product_id = 102
+
+    def fetch_clients(self, table_name):
+        form_table_name = table_name+'_fm'
+        self.check_table_form_master(form_table_name, table_name)        
+        query = f"SELECT id, municipality FROM {form_table_name} GROUP BY municipality ORDER BY municipality"
+
         rows = self.cur.execute(query)
         return rows
 
-    def fetch_mwd(self, muni=None):
-        if muni == None: 
-            muni = f"municipality != ''"
-        else:
-            muni = f"municipality = '{muni}'"
+    def fetch_mwd(self, table_name, muni=None ):
+        form_table_name = table_name+'_fm'
 
-        query = "SELECT id, form_no, municipality, ward, district, dcount FROM \
-                        form_master WHERE "+muni+" ORDER BY municipality, ward, district, dcount"
+        muni = f"municipality != ''" if muni == None else f"municipality = '{muni}'"
+
+        # if muni == None: 
+        #     muni = f"municipality != ''"
+        # else:
+        #     muni = f"municipality = '{muni}'"
+
+        query = f"SELECT id, form_no, municipality, ward, district, dcount FROM \
+                    {form_table_name} WHERE "+muni+" ORDER BY municipality, ward, district, dcount"
+
         rows = self.cur.execute(query)
         return rows
 

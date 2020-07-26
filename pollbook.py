@@ -204,7 +204,7 @@ def show_page(header_text):
 	project_date_lbl = Label(new_frame, text="Event Date", font=("helvetica", 12))	
 
 	if header_text == "Pollbook Lookup:":
-		jobs_listbox()
+		jobs_listbox(my_flash)
 	else:
 		project_event_lbl.pack(pady=10)
 		global event_combo
@@ -239,7 +239,7 @@ def show_page(header_text):
 
 
 
-def jobs_listbox():
+def jobs_listbox(my_flash):
 	wrapper_listbox_jobs = Frame(new_frame, relief="raised" )
 	wrapper_listbox_jobs.pack(fill="none", expand="no", padx="10", pady="5")
 	#Scrollbar
@@ -251,9 +251,10 @@ def jobs_listbox():
 	scrollbar_jobs.pack(side=RIGHT, fill=Y)
 	wrapper_listbox_jobs.pack()
 	listbox_jobs.pack()
-	listbox_jobs.bind('<<ListboxSelect>>', listbox_jobs_select) 	# Bind select
+	listbox_jobs.bind('<<ListboxSelect>>', lambda event: listbox_jobs_select(event, my_flash)) 	# Bind select
 
-def listbox_jobs_select(event):
+def listbox_jobs_select(event, my_flash):
+	print('listbox_jobs_selected',my_flash.cget('text'))
 	try:
 		global selected_table
 		selected_table = listbox_jobs.get(ANCHOR)
@@ -284,7 +285,7 @@ def open_file():
 	reset_run_frame(open_frame)
 
 	# Page Header 
-	text_mess = "Project: "	
+	text_mess = f"Project: {selected_table}"	
 	my_flash = Label(open_frame, text=f"{text_mess}", font=("helvetica", 14))
 	my_flash.pack(pady=5)
 

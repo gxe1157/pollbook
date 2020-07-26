@@ -50,12 +50,12 @@ def new_file():
 	#======================= Inner functions ===================================================
 	#Get file to import
 	def dir_browse():
-		resp, prj_name = new_file_validation() 
-		if resp != '':
-			messagebox.showerror("Validation Error:", resp)
+		error_mess, prj_name = new_file_validation() 
+		if error_mess != '':
+			messagebox.showerror("Validation Error:", error_mess)
 			return
 
-		f = f"{prj_name}. Continue or Cancel?"	
+		f = f"Your Project Name is {prj_name}"	
 		if messagebox.askokcancel("Please Confirm:", f'{f} '):
 			csv_file_name =  filedialog.askopenfilename(initialdir = "/",title = "Select file",filetypes = (("all files","*.*"),("jpeg files","*.jpg")))
 			if csv_file_name != "":
@@ -79,19 +79,17 @@ def new_file():
 
 		table_name = client_combo.get()+' '+event_combo.get()+' '+event_dt_month_combo.get()+' '+event_dt_year_combo.get()
 		chk_name = table_name.replace(' ', '_')
-		print('table_name:', chk_name);
-
 		table_exists = db.check_table_exists(chk_name)
+		project_name.insert(END, chk_name)
 
 		if table_exists == 1:
-			project_name.insert(END, table_name)
 			error_mess = f"Project name {table_name} is aready taken.\nPlease select another name."
-			project_name.delete(0, END) #deletes the current value
-		else:
-			project_name.insert(END, table_name)
 
+		if 	error_mess != '' or table_exists == 1: 
+			project_name.delete(0, END)
+			
 		project_name.config(state=DISABLED)		
-		return (error_mess, project_name.get())
+		return (error_mess, chk_name)
 
 
 	# Create Popup function
@@ -544,9 +542,7 @@ def delete_row():
 
 ## Combobox - Select Dropdown
 def fetch_municipalies():
-	sql_file = selected_table # this is global
-	rows = db.fetch_clients(sql_file)
-
+	rows = db.fetch_clients(selected_table) #SELECTED_TABLE IS GLOBAL
 	options = ['All...']
 	for row in rows:
 		options.append(f"{row[1]}")

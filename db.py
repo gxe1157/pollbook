@@ -70,7 +70,8 @@ class Database:
         return rows
 
     def fetch_all(self, table_name):
-        self.cur.execute("SELECT * FROM "+table_name)
+        query = f"SELECT * FROM {table_name}"
+        self.cur.execute(query)
         rows = self.cur.fetchall()
         return rows
 
@@ -90,7 +91,7 @@ class Database:
     def csv_to_sqlite(self, csv_file_name, progress_bar, percent, messagebox, table_name):
         number_columns = 0
         last_line = False
-        table_name = table_name.replace(' ', '_')
+
         table_exists = self.check_table_exists(table_name)
         if table_exists == 1:
             error_mess = f"Alert: Table Aready Exist."
@@ -140,7 +141,10 @@ class Database:
                         toc = time.perf_counter()
                         print(f"CSV Imported rows {str(record_number)} in {toc - tic:0.4f} seconds")
                         x +=2000
-                        if last_line == True:    
+                        if last_line == True:  
+                            # Create lookup table by municipality, ward, district with counts by districts
+                            self.check_table_form_master(table_name)        
+
                             success_mess = f"Total Numbr of Records : {record_number}."
                             messagebox.showinfo("Import File Successful", success_mess)
                             return True
@@ -152,8 +156,9 @@ class Database:
     #=============================================#
     #  
     #=============================================#
-    def check_table_form_master(self, form_table_name, table_name):
+    def check_table_form_master(self, table_name):
         ''' Create lookup table by municipality, ward, district with counts by districts '''
+        form_table_name = table_name+'_fm'        
         table_exists=self.check_table_exists(form_table_name)        
 
         if table_exists == False:
@@ -161,8 +166,6 @@ class Database:
             self.conn.commit()
 
             query = f"SELECT municipality, ward, district, count(district) as dcount FROM {table_name} GROUP BY municipality, ward, district ORDER BY municipality, ward, district"
-            print(query)
-
             self.cur.execute(query)
             rows = self.cur.fetchall()
             for row in rows:
@@ -172,6 +175,23 @@ class Database:
                 dcount = row[3]
                 self.cur.execute("INSERT INTO "+form_table_name+" VALUES (?, ?, ?, ?, ?, ?)", (None, None, municipality, ward, district, dcount))
             self.conn.commit()
+        return form_table_name    
+
+    def fetch_clients(self, table_name):
+        print('fetch_clients - table_name', table_name)        
+        form_table_name = self.check_table_form_master(table_name)        
+        query = f"SELECT id, municipality FROM {form_table_name} GROUP BY municipality ORDER BY municipality"
+        rows = self.cur.execute(query)
+        return rows
+
+    def fetch_mwd(self, table_name, muni=None ):
+        form_table_name = table_name+'_fm'
+        muni = f"municipality != ''" if muni == None else f"municipality = '{muni}'"
+        query = f"SELECT id, form_no, municipality, ward, district, dcount FROM \
+                    {form_table_name} WHERE "+muni+" ORDER BY municipality, ward, district, dcount"
+
+        rows = self.cur.execute(query)
+        return rows
 
     def update_mwd(self, data, table_name ):
         print(data);
@@ -183,30 +203,6 @@ class Database:
 
         sys.exit('quit...................')
         # query = UPDATE products SET Qty=100,product_name='CAD' WHERE product_id = 102
-
-    def fetch_clients(self, table_name):
-        form_table_name = table_name+'_fm'
-        self.check_table_form_master(form_table_name, table_name)        
-        query = f"SELECT id, municipality FROM {form_table_name} GROUP BY municipality ORDER BY municipality"
-
-        rows = self.cur.execute(query)
-        return rows
-
-    def fetch_mwd(self, table_name, muni=None ):
-        form_table_name = table_name+'_fm'
-
-        muni = f"municipality != ''" if muni == None else f"municipality = '{muni}'"
-
-        # if muni == None: 
-        #     muni = f"municipality != ''"
-        # else:
-        #     muni = f"municipality = '{muni}'"
-
-        query = f"SELECT id, form_no, municipality, ward, district, dcount FROM \
-                    {form_table_name} WHERE "+muni+" ORDER BY municipality, ward, district, dcount"
-
-        rows = self.cur.execute(query)
-        return rows
 
     def run_query(self, query):
         print(query)

@@ -403,8 +403,13 @@ def open_file():
 	# Buttons
 	up_btn = Button(wrapper2, text="Update", command=lambda: update_data(ent2))
 	up_btn.grid(row=7, column=1, padx=2, pady=1)
+	up_btn = Button(wrapper2, text="Clear", command=lambda: clear(ent2))
+	up_btn.grid(row=7, column=2, padx=2, pady=1)
+
 	up_btn = Button(wrapper2, text="Update Poll Info", command=update_poll_info)
 	up_btn.grid(row=7, column=4, padx=2, pady=1)
+	# up_btn = Button(wrapper2, text="Clear", command=update_poll_info)
+	# up_btn.grid(row=7, column=4, padx=2, pady=1)	
 
 # Start Screen
 def home():
@@ -477,18 +482,14 @@ def search(muni=None):
 		rows = db.fetch_mwd(selected_table, q2) # This is global
 		update(rows)
 
-def clear():
+def clear(ent2=None):
+	if ent2!=None:
+		ent2.config(state="disabled")				
 	clear_inputs()	
 	rows = db.fetch_mwd(selected_table) # This is global	
 	update(rows)
 
 def clear_inputs():
-	# enable these inputs fields
-	# ent2.config(state="normal")			
-	# ent1a.config(state="normal")			
-	# ent1b.config(state="normal")			
-	# ent1c.config(state="normal")			
-
 	t1.set(' ')
 	t2.set(' ')
 	t3.set(' ')		

@@ -183,9 +183,47 @@ def show_page(header_text):
 		option = client_combo.get()
 		try:
 			if listbox_jobs.winfo_exists():
-				listbox_jobs_update(option)
+				listbox_jobs.delete(0, END)			
+				if option !='Please Select....':
+					results = db.fetch_tables_list()
+					for result in results:
+						chk_str = option.replace(' ', '_') # If 
+						file_name = result[0]
+						if option in file_name and '_fm' not in file_name:
+							# print('found it! '+file_name)
+							listbox_jobs.insert(END, file_name )
+
+					if listbox_jobs.size() == 0:
+						listbox_jobs.insert(END, 'Records not found..........' )				
 		except:
 			pass
+
+	def jobs_listbox(my_flash):
+		wrapper_listbox_jobs = Frame(new_frame, relief="raised" )
+		wrapper_listbox_jobs.pack(fill="none", expand="no", padx="10", pady="5")
+		#Scrollbar
+		scrollbar_jobs = Scrollbar(wrapper_listbox_jobs, orient=VERTICAL)
+		#list Box - SINGLE, BROWSE, MULTIPLE, EXTENED
+		global listbox_jobs
+		listbox_jobs = Listbox(wrapper_listbox_jobs, width=65, yscrollcommand=scrollbar_jobs.set)
+		scrollbar_jobs.config(command=listbox_jobs.yview) 		#scrollbar configure
+		scrollbar_jobs.pack(side=RIGHT, fill=Y)
+		wrapper_listbox_jobs.pack()
+		listbox_jobs.pack()
+		listbox_jobs.bind('<<ListboxSelect>>', lambda event: listbox_jobs_select(event, my_flash)) 	# Bind select
+
+	def listbox_jobs_select(event, my_flash):
+		# print('listbox_jobs_selected',my_flash.cget('text'))
+		try:
+			global selected_table
+			selected_table = listbox_jobs.get(ANCHOR)
+			response = messagebox.askokcancel("Open SQL File", f'Open File {selected_table} ? ')
+			if response == 1:
+				open_file()
+
+		except IndexError:
+			pass
+
 
 	# Page Header 
 	my_flash = Label(new_frame, text=f"{header_text}", font=("helvetica", 14))
@@ -238,57 +276,41 @@ def show_page(header_text):
 		project_name.pack(ipadx=80, ipady=5)
 		project_name.config(state=DISABLED)				
 
+# def jobs_listbox(my_flash):
+# 	wrapper_listbox_jobs = Frame(new_frame, relief="raised" )
+# 	wrapper_listbox_jobs.pack(fill="none", expand="no", padx="10", pady="5")
+# 	#Scrollbar
+# 	scrollbar_jobs = Scrollbar(wrapper_listbox_jobs, orient=VERTICAL)
+# 	#list Box - SINGLE, BROWSE, MULTIPLE, EXTENED
+# 	global listbox_jobs
+# 	listbox_jobs = Listbox(wrapper_listbox_jobs, width=65, yscrollcommand=scrollbar_jobs.set)
+# 	scrollbar_jobs.config(command=listbox_jobs.yview) 		#scrollbar configure
+# 	scrollbar_jobs.pack(side=RIGHT, fill=Y)
+# 	wrapper_listbox_jobs.pack()
+# 	listbox_jobs.pack()
+# 	listbox_jobs.bind('<<ListboxSelect>>', lambda event: listbox_jobs_select(event, my_flash)) 	# Bind select
 
+# def listbox_jobs_select(event, my_flash):
+# 	print('listbox_jobs_selected',my_flash.cget('text'))
+# 	try:
+# 		global selected_table
+# 		selected_table = listbox_jobs.get(ANCHOR)
+# 		response = messagebox.askokcancel("Open SQL File", f'Open File {selected_table} ? ')
+# 		if response == 1:
+# 			open_file()
 
-def jobs_listbox(my_flash):
-	wrapper_listbox_jobs = Frame(new_frame, relief="raised" )
-	wrapper_listbox_jobs.pack(fill="none", expand="no", padx="10", pady="5")
-	#Scrollbar
-	scrollbar_jobs = Scrollbar(wrapper_listbox_jobs, orient=VERTICAL)
-	#list Box - SINGLE, BROWSE, MULTIPLE, EXTENED
-	global listbox_jobs
-	listbox_jobs = Listbox(wrapper_listbox_jobs, width=65, yscrollcommand=scrollbar_jobs.set)
-	scrollbar_jobs.config(command=listbox_jobs.yview) 		#scrollbar configure
-	scrollbar_jobs.pack(side=RIGHT, fill=Y)
-	wrapper_listbox_jobs.pack()
-	listbox_jobs.pack()
-	listbox_jobs.bind('<<ListboxSelect>>', lambda event: listbox_jobs_select(event, my_flash)) 	# Bind select
-
-def listbox_jobs_select(event, my_flash):
-	print('listbox_jobs_selected',my_flash.cget('text'))
-	try:
-		global selected_table
-		selected_table = listbox_jobs.get(ANCHOR)
-		response = messagebox.askokcancel("Open SQL File", f'Open File {selected_table} ? ')
-		if response == 1:
-			open_file()
-
-	except IndexError:
-		pass
-
-def listbox_jobs_update(option):	
-	listbox_jobs.delete(0, END)			
-	if option !='Please Select....':
-		results = db.fetch_tables_list()
-		for result in results:
-			chk_str = option.replace(' ', '_') # If 
-			file_name = result[0]
-			if option in file_name and '_fm' not in file_name:
-				# print('found it! '+file_name)
-				listbox_jobs.insert(END, file_name )
-
-		if listbox_jobs.size() == 0:
-			listbox_jobs.insert(END, 'Records not found..........' )
-
+# 	except IndexError:
+# 		pass
 
 # Open Poll Book
 def open_file():
 	reset_run_frame(open_frame)
 
 	# Page Header 
-	text_mess = f"Project: {selected_table}"	
-	my_flash = Label(open_frame, text=f"{text_mess}", font=("helvetica", 14))
-	my_flash.pack(pady=5)
+	header_text = selected_table.replace('_', ' ')
+	text_mess = f"{header_text}"	
+	my_flash = Label(open_frame, text=f"{text_mess}", font=("helvetica", 12), relief= RIDGE, bd=5)
+	my_flash.pack(ipadx=20, ipady=5, pady=2)
 
 	# Create Section Frames
 	wrapper1 = LabelFrame(open_frame, text="Dispaly List")
@@ -303,9 +325,9 @@ def open_file():
 	options = fetch_municipalies();
 
 	global mycombo
-	mycombo = ttk.Combobox(wrapper1, textvariable=opts, width=30, font=("helvetica", 12))	
+	mycombo = ttk.Combobox(wrapper1, textvariable=opts, width=30, font=("helvetica", 10))	
 	mycombo['values'] = options
-	mycombo.pack(padx=5, pady=10)
+	mycombo.pack(pady=10)
 	mycombo.current(0)
 	mycombo.bind("<<ComboboxSelected>>", get_municipality )    
 
@@ -315,7 +337,7 @@ def open_file():
 	# trv.place(x=30, y=45)
 	global vsb
 	vsb = ttk.Scrollbar(wrapper1, orient="vertical", command=trv.yview)
-	vsb.place(x=730, y=45, height=265)
+	vsb.place(x=730, y=45, height=260)
 	trv.configure(yscrollcommand=vsb.set)
 	trv.pack()
 
@@ -343,7 +365,7 @@ def open_file():
 	#scrollbar configure
 	my_scrollbar.config(command=my_listbox.yview)
 	my_scrollbar.pack(side=RIGHT, fill=Y)
-	wrapper3.pack()
+	# wrapper3.pack()
 
 	my_listbox.pack(pady=5)
 	for i in range(8):
@@ -401,15 +423,17 @@ def open_file():
 	ent5.grid(row=4, column=1, padx=5, pady=3)
 
 	# Buttons
-	up_btn = Button(wrapper2, text="Update", command=lambda: update_data(ent2))
-	up_btn.grid(row=7, column=1, padx=2, pady=1)
-	up_btn = Button(wrapper2, text="Clear", command=lambda: clear(ent2))
-	up_btn.grid(row=7, column=2, padx=2, pady=1)
-
-	up_btn = Button(wrapper2, text="Update Poll Info", command=update_poll_info)
-	up_btn.grid(row=7, column=4, padx=2, pady=1)
-	# up_btn = Button(wrapper2, text="Clear", command=update_poll_info)
-	# up_btn.grid(row=7, column=4, padx=2, pady=1)	
+	global up_btn1
+	up_btn1 = Button(wrapper2, text="Update",  width=7, command=update_data, state=DISABLED)
+	up_btn1.grid(row=7, column=1, sticky=W, padx=5, pady=3)
+	global up_btn2
+	up_btn2 = Button(wrapper2, text="Clear", width=7, command=lambda: clear(ent2, lbl1a, lbl1b, lbl1c, up_btn1, up_btn2, up_btn3), state=DISABLED)
+	up_btn2.grid(row=7, column=1, sticky=E, padx=5, pady=3)
+	global up_btn3
+	up_btn3 = Button(wrapper2, text="Update Poll Info", width=14, command=update_poll_info, state=DISABLED)
+	up_btn3.grid(row=7, column=4, pady=1)
+	up_btn4 = Button(wrapper2, text="Pollbook Lookup", width=14, command=get_file)
+	up_btn4.grid(row=7, column=4, sticky=E, pady=1)	
 
 # Start Screen
 def home():
@@ -482,9 +506,16 @@ def search(muni=None):
 		rows = db.fetch_mwd(selected_table, q2) # This is global
 		update(rows)
 
-def clear(ent2=None):
+def clear(ent2=None, lbl1a=None, lbl1b=None, lbl1c=None, up_btn1=None, up_btn2=None, up_btn3=None):
 	if ent2!=None:
-		ent2.config(state="disabled")				
+		ent2.config(state="disabled")
+		ent1a.config(state="disabled")
+		ent1b.config(state="disabled")
+		ent1c.config(state="disabled")
+		up_btn1.config(state="disabled")
+		up_btn2.config(state="disabled")
+		up_btn3.config(state="disabled")
+
 	clear_inputs()	
 	rows = db.fetch_mwd(selected_table) # This is global	
 	update(rows)
@@ -505,11 +536,8 @@ def getrow(event):
 	rowid = trv.identify_row(event.y)
 	item = trv.item(trv.focus())
 
-	# enable these inputs fields
-	ent2.config(state="normal")			
-	ent1a.config(state="normal")			
-	ent1b.config(state="normal")			
-	ent1c.config(state="normal")			
+	# enable these inputs fields and buttons
+	customer_data_toggle(True)
 
 	t1.set(item['values'][0])
 	t2.set(item['values'][1])
@@ -517,9 +545,7 @@ def getrow(event):
 	t4.set(item['values'][3])		
 	t5.set(item['values'][4])		
 
-def update_data(ent2):
-	ent2.config(state="disabled")				
-	# sys.exit("quit..............")
+def update_data():
 	sql_file = selected_table+"_fm" # This is global		
 	rec_id = t1.get()
 	form_no = t2.get()
@@ -528,11 +554,25 @@ def update_data(ent2):
 	query = f"UPDATE {sql_file} SET form_no = {form_no} WHERE id = {rec_id}"
 	db.run_query(query)
 
-	# disable entry field
-	ent2.config(state="disabled")					
+	# disable these inputs fields and buttons
+	customer_data_toggle(False)
 	search(muni)
 
+def customer_data_toggle(isNormal):
+	print(f"customer_data_toggle -- {isNormal}")
+
+	status = "normal" if isNormal else "disabled"
+	up_btn1.config(state=status)
+	up_btn2.config(state=status)
+	up_btn3.config(state=status)	
+	ent2.config(state=status)
+	ent1a.config(state=status)			
+	ent1b.config(state=status)			
+	ent1c.config(state=status)
+
+
 def update_poll_info():
+	# state=DISABLED
 	data={}
 	sql_file = selected_table+"_fm" # This is global		
 	rec_id = t1.get()

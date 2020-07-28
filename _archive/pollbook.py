@@ -285,17 +285,24 @@ def open_file():
 		for i in rows:
 			trv.insert('', 'end', values=i)
 
-	def search():
-		muni = mycombo.get()		
+	def search(muni=None):
 		if muni == None or muni =='All...':
 			clear()
 		else:
-			clear_inputs()
 			q2 = muni.upper()
 			rows = db.fetch_mwd(selected_table, q2) # This is global
 			update(rows)
 
-	def clear():
+	def clear(ent2=None, lbl1a=None, lbl1b=None, lbl1c=None, up_btn1=None, up_btn2=None, up_btn3=None):
+		if ent2!=None:
+			ent2.config(state="disabled")
+			ent1a.config(state="disabled")
+			ent1b.config(state="disabled")
+			ent1c.config(state="disabled")
+			up_btn1.config(state="disabled")
+			up_btn2.config(state="disabled")
+			up_btn3.config(state="disabled")
+
 		clear_inputs()	
 		rows = db.fetch_mwd(selected_table) # This is global	
 		update(rows)
@@ -306,11 +313,24 @@ def open_file():
 		t3.set(' ')		
 		t4.set(' ')		
 		t5.set(' ')		
+
 		t1a.set(' ')
 		t1b.set(' ')
 		t1c.set(' ')		
 
-		customer_data_toggle(False)
+
+	def getrow(event):
+		rowid = trv.identify_row(event.y)
+		item = trv.item(trv.focus())
+
+		# enable these inputs fields and buttons
+		customer_data_toggle(True)
+
+		t1.set(item['values'][0])
+		t2.set(item['values'][1])
+		t3.set(item['values'][2])		
+		t4.set(item['values'][3])		
+		t5.set(item['values'][4])		
 
 	def update_data():
 		sql_file = selected_table+"_fm" # This is global		
@@ -320,26 +340,14 @@ def open_file():
 
 		query = f"UPDATE {sql_file} SET form_no = {form_no} WHERE id = {rec_id}"
 		db.run_query(query)
-		search()
 
-	def getrow(event):
-		rowid = trv.identify_row(event.y)
-		item = trv.item(trv.focus())
-
-		# enable these inputs fields and buttons
-		customer_data_toggle(True)
-		t1.set(item['values'][0])
-		t2.set(item['values'][1])
-		t3.set(item['values'][2])		
-		t4.set(item['values'][3])		
-		t5.set(item['values'][4])		
-
-		t1a.set(' ')
-		t1b.set(' ')
-		t1c.set(' ')		
+		# disable these inputs fields and buttons
+		customer_data_toggle(False)
+		search(muni)
 
 	def customer_data_toggle(isNormal):
-		# print(f"customer_data_toggle -- {isNormal}")
+		print(f"customer_data_toggle -- {isNormal}")
+
 		status = "normal" if isNormal else "disabled"
 		up_btn1.config(state=status)
 		up_btn2.config(state=status)
@@ -351,6 +359,7 @@ def open_file():
 
 
 	def update_poll_info():
+		# state=DISABLED
 		data={}
 		sql_file = selected_table+"_fm" # This is global		
 		rec_id = t1.get()
@@ -367,7 +376,7 @@ def open_file():
 		print('poll update query: ', query)
 
 		# db.run_query(query)
-		search()
+		# search(muni)
 
 
 	## Combobox - Select Dropdown
@@ -380,9 +389,9 @@ def open_file():
 
 	def get_municipality(event):
 		muni = mycombo.get()
-		search()
+		search(muni)
 
-	## my_listbox functions
+	## List box functions
 	def delete_one():
 		my_listbox.delete(ANCHOR)
 
@@ -466,6 +475,12 @@ def open_file():
 	for i in range(8):
 		my_listbox.insert(END, f"This is an item {i}" )
 
+
+	
+	#========================== Select a job number and display default records =======================
+	clear()
+
+
 	# Data User Frame
 	# Input Fields
 	lbl1 = Label(wrapper2, text="Record No")
@@ -516,20 +531,13 @@ def open_file():
 	up_btn1 = Button(wrapper2, text="Update",  width=7, command=update_data, state=DISABLED)
 	up_btn1.grid(row=7, column=1, sticky=W, padx=5, pady=3)
 	global up_btn2
-	up_btn2 = Button(wrapper2, text="Clear", width=7, command=search, state=DISABLED)
+	up_btn2 = Button(wrapper2, text="Clear", width=7, command=lambda: clear(ent2, lbl1a, lbl1b, lbl1c, up_btn1, up_btn2, up_btn3), state=DISABLED)
 	up_btn2.grid(row=7, column=1, sticky=E, padx=5, pady=3)
 	global up_btn3
 	up_btn3 = Button(wrapper2, text="Update Poll Info", width=14, command=update_poll_info, state=DISABLED)
-	up_btn3.grid(row=7, column=4, sticky=W, pady=1)
-
-	up_btn4 = Button(wrapper2, text="Update Forms", width=14, command=win_assign_formno)
-	up_btn4.grid(row=7, column=4, pady=1)	
+	up_btn3.grid(row=7, column=4, pady=1)
 	up_btn4 = Button(wrapper2, text="Pollbook Lookup", width=14, command=get_file)
 	up_btn4.grid(row=7, column=4, sticky=E, pady=1)	
-
-	#========================== Select a job number and display default records =======================
-	clear()
-
 
 # Start Screen
 def home():
@@ -597,100 +605,29 @@ def restore_menu():
 #####################################################
 root = Tk()
 root.title("Poll Books App!")
-# root.iconbitmap('c:/guis/exe/codemy.ico')
 root.resizable(False, False)
 root.geometry("800x700")
 
 # Gets the requested values of the height and widht.
 windowWidth = root.winfo_reqwidth()
 windowHeight = root.winfo_reqheight()
+# print("Width",windowWidth,"Height",windowHeight)
+ 
 # Gets both half the screen width/height and window width/height
 positionRight = int(root.winfo_screenwidth()/3 - windowWidth/2)
 positionDown = int(root.winfo_screenheight()/3 - windowHeight/2)
+ 
 # Positions the window in the center of the page.
 root.geometry("+{}+{}".format(positionRight, positionDown))
+# root.iconbitmap('c:/guis/exe/codemy.ico')
 
-my_entries = []
-my_labels = []
-
-def win_assign_formno():
-	muni = mycombo.get()
-	print(muni)
-
+def open_directory():
 	top = Toplevel()
 	top.title('window 2')
-	top.geometry("900x700")
-	top.resizable(False, False)
+	top.geometry("400x300")
 	top.geometry("+{}+{}".format(positionRight, positionDown))
-	# top.grab_set()  #.grab_release() # to return to normal
-	top.attributes('-topmost', 'true') # Make topLevelWindow remain on top until destroyed, or attribute changes.
-
-	# my_header = Label(root, text='MUNICIPALITY:', font=("helvetica", 14) )
-	# my_header.grid(row=0, column=0, columnspan=9, pady=20)
-
-    #=============================================#
-    # Toplevel Windowmethods
-    #=============================================#    
-	def show_ward(r1, r2, ward_no):
-		# v[id, form_no, municipality, ward, district, dcount ]
-		my_label = Label(top, width=10, text= f"Ward {ward_no}", fg="white", bg="grey")
-		my_label.grid(row=r1, column=0, pady=1, padx=40)
-		my_label = Label(top, width=10, text= f"Total: 0")
-		my_label.grid(row=r2, column=0, pady=1, padx=40)
-
-	def show_districts(selected_table, muni):
-		mwds = db.fetch_mwd(selected_table, muni) # This is global
-		#  id, form_no, municipality, ward, district, dcount            
-		# (109, 20, 'HIGHTSTOWN', '', 1, 179)
-
-		# y=True
-		x = 1
-		y1 = 1
-		y2 = 2
-		offset = 2
-		for row in mwds:
-			print(row)
-
-		ward_no = mwds[0][3]
-
-		for i, item in enumerate(mwds):
-			item = ['' if x is None else x for x in item]
-
-			show_ward_no = True
-			if i == 0:
-				show_ward(y1, y2, item[3])          
-
-			if ward_no != item[3]:
-				ward_no = item[3]
-				show_ward_no = False
-				x=9
-
-			if x == 9:
-				x=1
-				if show_ward_no == True and len(ward_no)>0:
-					show_ward(y1, y2, item[3])                      
-					y1 += offset
-					y2 += offset
-
-			my_label = Label(top, width=10, text= f"District {item[4]}", fg="white", bg="grey")
-			my_label.grid(row=y1, column=x, pady=1, padx=5)
-			my_entry = Entry(top, width=10)     
-			my_entry.grid(row=y2, column=x, pady=5, padx=5)
-
-			# form data entry
-			my_labels.append(my_label)
-			if item[1] == '':
-				my_entry.config({"background": "#DEDCDC"})          
-
-			my_entry.insert(0, f"{item[1]}")
-			my_entries.append(my_entry)
-			x += 1
-		# my_header.config(text=f"MUNICIPALITY: {item[4]}", font=("helvetica", 14))
-
-	muni = mycombo.get()
-	print(muni)
-	show_districts(selected_table, muni)
-	top.mainloop()	
+	top.grab_set()  #.grab_release() # to return to normal
+	bnt2 = Button(top, text="close", command=top.destroy).pack(pady=10)
 
 
 project_name = StringVar()

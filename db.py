@@ -191,7 +191,8 @@ class Database:
         query = f"SELECT id, form_no, municipality, ward, district, dcount FROM \
                     {form_table_name} WHERE "+muni+" ORDER BY municipality, ward, district, dcount"
 
-        rows = self.cur.execute(query)
+        self.cur.execute(query)
+        rows = self.cur.fetchall()
         return rows
 
     def update_mwd(self, data, table_name ):
@@ -255,3 +256,4 @@ class Database:
     def _insert_record(self, build_placeHolder, csv_row, table_name):
         query = "INSERT INTO "+table_name+" values ("+build_placeHolder+")"     
         self.cur.execute(query, csv_row)
+

@@ -349,6 +349,11 @@ def open_file():
 		ent1b.config(state=status)			
 		ent1c.config(state=status)
 
+		# topwindow toggle button 
+		muni = mycombo.get()
+		status = "disabled" if muni=='All...' else 'normal'
+		up_btn5.config(state=status)					
+
 
 	def update_poll_info():
 		data={}
@@ -522,11 +527,11 @@ def open_file():
 	up_btn3 = Button(wrapper2, text="Update Poll Info", width=14, command=update_poll_info, state=DISABLED)
 	up_btn3.grid(row=7, column=4, sticky=W, pady=1)
 
-	up_btn4 = Button(wrapper2, text="Update Forms", width=14, command=win_assign_formno)
-	up_btn4.grid(row=7, column=4, pady=1)	
 	up_btn4 = Button(wrapper2, text="Pollbook Lookup", width=14, command=get_file)
 	up_btn4.grid(row=7, column=4, sticky=E, pady=1)	
-
+	up_btn5 = Button(wrapper2, text="Update Forms", width=14, command=win_assign_formno)
+	up_btn5.grid(row=7, column=4, pady=1)	
+	
 	#========================== Select a job number and display default records =======================
 	clear()
 
@@ -614,9 +619,6 @@ my_entries = []
 my_labels = []
 
 def win_assign_formno():
-	muni = mycombo.get()
-	print(muni)
-
 	top = Toplevel()
 	top.title('window 2')
 	top.geometry("900x700")
@@ -631,6 +633,9 @@ def win_assign_formno():
     #=============================================#
     # Toplevel Windowmethods
     #=============================================#    
+	def test():
+		pass
+
 	def show_ward(r1, r2, ward_no):
 		# v[id, form_no, municipality, ward, district, dcount ]
 		my_label = Label(top, width=10, text= f"Ward {ward_no}", fg="white", bg="grey")
@@ -639,20 +644,24 @@ def win_assign_formno():
 		my_label.grid(row=r2, column=0, pady=1, padx=40)
 
 	def show_districts(selected_table, muni):
+		header_text = selected_table.replace('_', ' ')
+		text_mess = f"{header_text}\n\n{muni}"	
+
+		header = Label(top, text=f"{text_mess}", font=("helvetica", 12), relief= RIDGE, bd=5)
+		header.grid(row=0, column=0, columnspan=9, ipadx=20, ipady=5, pady=2)
+
+		header1 = Label(top, text=f"", font=("helvetica", 12))
+		header1.grid(row=2, column=0, columnspan=9, ipadx=20, ipady=5, pady=2)
+
 		mwds = db.fetch_mwd(selected_table, muni) # This is global
-		#  id, form_no, municipality, ward, district, dcount            
-		# (109, 20, 'HIGHTSTOWN', '', 1, 179)
-
-		# y=True
 		x = 1
-		y1 = 1
-		y2 = 2
+		y1 = 5
+		y2 = 6
 		offset = 2
-		for row in mwds:
-			print(row)
-
-		ward_no = mwds[0][3]
-
+		for row in mwds: print(row)
+		
+		ward_no = mwds[0][3] 				# id, form_no, municipality, ward, district, dcount            
+		muni_name = mwds[0][2]				# (109, 20, 'HIGHTSTOWN', '', 1, 179)
 		for i, item in enumerate(mwds):
 			item = ['' if x is None else x for x in item]
 
@@ -668,9 +677,9 @@ def win_assign_formno():
 			if x == 9:
 				x=1
 				if show_ward_no == True and len(ward_no)>0:
-					show_ward(y1, y2, item[3])                      
-					y1 += offset
-					y2 += offset
+					show_ward(y1, y2, item[3])
+				y1 += offset
+				y2 += offset
 
 			my_label = Label(top, width=10, text= f"District {item[4]}", fg="white", bg="grey")
 			my_label.grid(row=y1, column=x, pady=1, padx=5)
@@ -679,14 +688,27 @@ def win_assign_formno():
 
 			# form data entry
 			my_labels.append(my_label)
-			if item[1] == '':
-				my_entry.config({"background": "#DEDCDC"})          
+			if item[1] >0:
+				my_entry.config({"background": "#f5efd0"})          #DEDCDC
 
 			my_entry.insert(0, f"{item[1]}")
 			my_entries.append(my_entry)
 			x += 1
-		# my_header.config(text=f"MUNICIPALITY: {item[4]}", font=("helvetica", 14))
 
+		# Buttons
+		buttonframe = Frame(top)
+		buttonframe.grid(row=20, column=0, columnspan=9, pady=20)
+
+		button1 = Button(buttonframe, text='Close', width=12, command=top.destroy)
+		button1.pack( side = LEFT)
+
+		button2 = Button(buttonframe, text='Clear Fields', width=12, command=test)
+		button2.pack( side = LEFT )
+
+		button3 = Button(buttonframe, text='Save', width=12, command=test)
+		button3.pack( side = LEFT )
+
+	# Page Header 
 	muni = mycombo.get()
 	print(muni)
 	show_districts(selected_table, muni)

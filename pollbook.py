@@ -633,8 +633,25 @@ def win_assign_formno():
     #=============================================#
     # Toplevel Windowmethods
     #=============================================#    
-	def test():
-		pass
+	def save_sql(mwds, my_entries):
+		data = []			
+		for mwd, entry in zip(mwds, my_entries):
+			fld1, fld2, municipality, ward, district, count = mwd
+			form_value = entry.get()
+			data.append((municipality, ward, district, form_value))
+
+		table_name = selected_table     # global var
+		set_columns = '''form_no = ? '''
+		where_condition = '''municipality = ? and ward = ? and district = ?'''
+
+		db.updateMultipleRecords(set_columns, where_condition, data, table_name)
+
+	def clear_fields(my_entries):
+		for i, item in enumerate(my_entries):
+			# print(item.get())
+			item.config({"background": "white"}) 			
+			item.delete(0, END)
+			item.insert(END,'0')
 
 	def show_ward(r1, r2, ward_no):
 		# v[id, form_no, municipality, ward, district, dcount ]
@@ -643,15 +660,33 @@ def win_assign_formno():
 		my_label = Label(top, width=10, text= f"Total: 0")
 		my_label.grid(row=r2, column=0, pady=1, padx=40)
 
+	def show_dist(r1, r2, x, item, eof=False):
+		my_label = Label(top, width=10, text= f"District {item[4]}", fg="white", bg="grey")
+		my_label.grid(row=r1, column=x, pady=1, padx=5)
+
+		if eof:
+			my_label.config(text="")
+			return
+
+		my_entry = Entry(top, width=10)     
+		my_entry.grid(row=r2, column=x, pady=5, padx=5)
+		my_labels.append(my_label)		
+
+		if item[1] >0:
+			my_entry.config({"background": "#f5efd0"})          #DEDCDC
+
+		my_entry.insert(0, f"{item[1]}")
+		my_entries.append(my_entry)
+
 	def show_districts(selected_table, muni):
 		header_text = selected_table.replace('_', ' ')
 		text_mess = f"{header_text}\n\n{muni}"	
 
 		header = Label(top, text=f"{text_mess}", font=("helvetica", 12), relief= RIDGE, bd=5)
-		header.grid(row=0, column=0, columnspan=9, ipadx=20, ipady=5, pady=2)
+		header.grid(row=0, column=3, columnspan=3, ipadx=20, ipady=5, pady=2)
 
 		header1 = Label(top, text=f"", font=("helvetica", 12))
-		header1.grid(row=2, column=0, columnspan=9, ipadx=20, ipady=5, pady=2)
+		header1.grid(row=2, column=0, columnspan=8)
 
 		mwds = db.fetch_mwd(selected_table, muni) # This is global
 		x = 1
@@ -681,31 +716,24 @@ def win_assign_formno():
 				y1 += offset
 				y2 += offset
 
-			my_label = Label(top, width=10, text= f"District {item[4]}", fg="white", bg="grey")
-			my_label.grid(row=y1, column=x, pady=1, padx=5)
-			my_entry = Entry(top, width=10)     
-			my_entry.grid(row=y2, column=x, pady=5, padx=5)
-
-			# form data entry
-			my_labels.append(my_label)
-			if item[1] >0:
-				my_entry.config({"background": "#f5efd0"})          #DEDCDC
-
-			my_entry.insert(0, f"{item[1]}")
-			my_entries.append(my_entry)
+			show_dist(y1, y2, x, item)          	
 			x += 1
 
-		# Buttons
-		buttonframe = Frame(top)
-		buttonframe.grid(row=20, column=0, columnspan=9, pady=20)
+		for col_pos in range( x, 9):
+			show_dist(y1, y2, col_pos, item, True)
 
-		button1 = Button(buttonframe, text='Close', width=12, command=top.destroy)
+		# Buttons
+		y2 += offset
+		buttonframe = Frame(top)
+		buttonframe.grid(row=y2, column=0, columnspan=9, pady=15)
+
+		button1 = Button(buttonframe, text='Cancel', width=12, command=top.destroy)
 		button1.pack( side = LEFT)
 
-		button2 = Button(buttonframe, text='Clear Fields', width=12, command=test)
+		button2 = Button(buttonframe, text='Clear Fields', width=12, command=lambda: clear_fields(my_entries))
 		button2.pack( side = LEFT )
 
-		button3 = Button(buttonframe, text='Save', width=12, command=test)
+		button3 = Button(buttonframe, text='Save', width=12, command=lambda: save_sql(mwds, my_entries))
 		button3.pack( side = LEFT )
 
 	# Page Header 

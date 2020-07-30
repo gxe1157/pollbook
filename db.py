@@ -196,7 +196,7 @@ class Database:
         return rows
 
     def update_mwd(self, data, table_name ):
-        print(data);
+        print(data)
         set_flds = ' SET '
         for key, value in data.items():
             set_flds += f"{key} = {value},  "
@@ -205,6 +205,44 @@ class Database:
 
         sys.exit('quit...................')
         # query = UPDATE products SET Qty=100,product_name='CAD' WHERE product_id = 102
+
+
+    def updateMultipleRecords(self, set_columns, where_condition, data, table_name):
+        try:
+            # query = f"Update {table_name} set {set_columns} where {where_condition}"
+            # print(query)
+            for municipality, ward, district, form_value in data:
+                query = f"Update {table_name} set form_no='{form_value}' where municipality='{municipality}' and ward='{ward}' and district='{district}'"
+                print(query)            
+
+                # self.cur.execute(query)
+                # print("Total", self.cur.rowcount, "Records updated successfully")
+
+            self.conn.commit()
+
+            # print("Total", self.cur.rowcount, "Records updated successfully")
+            # self.conn.commit()
+            
+        except sqlite3.Error as error:
+            print("Failed to update multiple records of sqlite table", error)
+
+        finally:
+            pass
+            
+    # Update Bergen_General_Oct_2020 set form_no='10' where municipality='HIGHTSTOWN' and ward='' and district='1'
+
+        # def updateMultipleColumns(id, salary, email):
+        #     try:
+        #         sqlite_update_query = """Update new_developers set salary = ?, email = ? where id = ?"""
+        #         columnValues = (salary, email, id)
+        #         cursor.execute(sqlite_update_query, columnValues)
+        #         sqliteConnection.commit()
+        #     except sqlite3.Error as error:
+        #         print("Failed to update multiple columns of sqlite table", error)
+        #     finally:
+        #         if (sqliteConnection):
+        #             sqliteConnection.close()
+        #             print("sqlite connection is closed")
 
     def run_query(self, query):
         print(query)

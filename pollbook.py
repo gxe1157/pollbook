@@ -279,7 +279,7 @@ def show_page(header_text):
 # Open Poll Book
 def open_file():
 	reset_run_frame(open_frame)
-	#============================= Inner Funtions  ======================================================
+	#============================= Inner Funtions =========================================
 	def update(rows):
 		trv.delete(*trv.get_children())
 		for i in rows:
@@ -373,7 +373,6 @@ def open_file():
 
 		# db.run_query(query)
 		search()
-
 
 	## Combobox - Select Dropdown
 	def fetch_municipalies():
@@ -624,11 +623,7 @@ def win_assign_formno():
 	top.geometry("900x700")
 	top.resizable(False, False)
 	top.geometry("+{}+{}".format(positionRight, positionDown))
-	# top.grab_set()  #.grab_release() # to return to normal
 	top.attributes('-topmost', 'true') # Make topLevelWindow remain on top until destroyed, or attribute changes.
-
-	# my_header = Label(root, text='MUNICIPALITY:', font=("helvetica", 14) )
-	# my_header.grid(row=0, column=0, columnspan=9, pady=20)
 
     #=============================================#
     # Toplevel Windowmethods
@@ -638,12 +633,17 @@ def win_assign_formno():
 		for mwd, entry in zip(mwds, my_entries):
 			fld1, fld2, municipality, ward, district, count = mwd
 			form_value = entry.get()
-			data.append((municipality, ward, district, form_value))
+			dist = str(district) if len(str(district))==2 else '0'+str(district)
+			# ward = ward if len(ward)>0 else ''
+			data.append((form_value, municipality, ward, dist))
 
 		table_name = selected_table     # global var
 		set_columns = '''form_no = ? '''
 		where_condition = '''municipality = ? and ward = ? and district = ?'''
 
+		db.updateMultipleRecords(set_columns, where_condition, data, table_name)
+
+		table_name = selected_table+"_fm"     # global var		
 		db.updateMultipleRecords(set_columns, where_condition, data, table_name)
 
 	def clear_fields(my_entries):
@@ -678,7 +678,7 @@ def win_assign_formno():
 		my_entry.insert(0, f"{item[1]}")
 		my_entries.append(my_entry)
 
-	def show_districts(selected_table, muni):
+	def show_districts(muni):
 		header_text = selected_table.replace('_', ' ')
 		text_mess = f"{header_text}\n\n{muni}"	
 
@@ -739,7 +739,7 @@ def win_assign_formno():
 	# Page Header 
 	muni = mycombo.get()
 	print(muni)
-	show_districts(selected_table, muni)
+	show_districts(muni)
 	top.mainloop()	
 
 

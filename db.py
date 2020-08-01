@@ -272,6 +272,12 @@ class Database:
         build_placeHolder += '?,'            
         build_tableSchema +=  'create_dt timestamp,'  #datetime.datetime.now()
         build_placeHolder += '?,'            
+        build_tableSchema +=  'poll_name text,'  #datetime.datetime.now()
+        build_placeHolder += '?,'            
+        build_tableSchema +=  'poll_address text,'  #datetime.datetime.now()
+        build_placeHolder += '?,'            
+        build_tableSchema +=  'poll_location text,'  #datetime.datetime.now()
+        build_placeHolder += '?,'            
         
 
         build_tableSchema = build_tableSchema[:-1]

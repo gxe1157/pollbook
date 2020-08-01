@@ -134,7 +134,7 @@ def new_file():
 	button2 = Button(buttonframe, text='Clear Fields', width=12, command=new_file)
 	button2.pack( side = LEFT )
 
-	button3 = Button(buttonframe, text='Get File', width=12, command=dir_browse)
+	button3 = Button(buttonframe, text='Create Job', width=12, command=dir_browse)
 	button3.pack( side = LEFT )
 
 
@@ -145,6 +145,7 @@ def get_file():
 
 	header_text = "Pollbook Lookup:"
 	show_page(header_text)
+
 	# Buttons
 	buttonframe = Frame(new_frame)
 	buttonframe.pack(pady=20)
@@ -156,6 +157,7 @@ def get_file():
 	button2.pack( side = LEFT )
 
 def show_page(header_text):
+
 	#======================= Inner functions ===================================================
 	def get_cust_list():
 		results = db.fetch_all('customers')
@@ -183,8 +185,9 @@ def show_page(header_text):
 		option = client_combo.get()
 		try:
 			if listbox_jobs.winfo_exists():
-				listbox_jobs.delete(0, END)			
+				listbox_jobs.delete(0, END)
 				if option !='Please Select....':
+					listbox_jobs.config(state=NORMAL, bg="#faf6e1")													
 					results = db.fetch_tables_list()
 					for result in results:
 						chk_str = option.replace(' ', '_') # If 
@@ -195,6 +198,9 @@ def show_page(header_text):
 
 					if listbox_jobs.size() == 0:
 						listbox_jobs.insert(END, 'Records not found..........' )				
+						messagebox.showwarning("Databae Lookup", 'Records not found..........')
+				else:
+					listbox_jobs.config(state=DISABLED, bg="#e6e6e6")									
 		except:
 			pass
 
@@ -217,15 +223,21 @@ def show_page(header_text):
 		try:
 			global selected_table
 			selected_table = listbox_jobs.get(ANCHOR)
-			response = messagebox.askokcancel("Open SQL File", f'Open File {selected_table} ? ')
-			if response == 1:
-				open_file()
+
+			if selected_table == 'Records not found..........':
+				messagebox.showwarning("Database Look", selected_table)
+				return
+
+			if client_combo.get() !='Please Select....':
+				response = messagebox.askokcancel("Open SQL File", f'Open File {selected_table} ? ')
+				if response == 1:
+					open_file()
 
 		except IndexError:
 			pass
 
 
-	# Page Header 
+	# Page Header
 	my_flash = Label(new_frame, text=f"{header_text}", font=("helvetica", 14))
 	my_flash.pack(pady=10)
 	project_account_lbl = Label(new_frame, text='Account', font=("helvetica", 12)).pack(pady=10)
@@ -244,6 +256,7 @@ def show_page(header_text):
 
 	if header_text == "Pollbook Lookup:":
 		jobs_listbox(my_flash)
+		listbox_jobs.config(state=DISABLED, bg="#e6e6e6")						
 	else:
 		project_event_lbl.pack(pady=10)
 		global event_combo

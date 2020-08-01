@@ -326,14 +326,36 @@ def clear_inputs():
 	customer_data_toggle(False)
 
 def update_data():
-	sql_file = selected_table+"_fm" # This is global		
-	rec_id = t1.get()
 	form_no = t2.get()
-	muni= t3.get()
+	municipality = t3.get()
+	ward = t4.get() 
+	dist_temp = t5.get()
+	district = str(dist_temp) if len(str(dist_temp))==2 else '0'+str(dist_temp)	
+	poll_name = t1a.get()
+	poll_address = t1b.get()
+	poll_location = t1c.get()		
 
-	query = f"UPDATE {sql_file} SET form_no = {form_no} WHERE id = {rec_id}"
-	db.run_query(query)
+	data = [(form_no, poll_name, poll_address,  poll_location, municipality, ward, district ),]
+	table_name = selected_table     # global var
+	set_columns = '''form_no = ?, poll_name = ?, poll_address = ?, poll_location = ?'''
+	where_condition = '''municipality = ? and ward = ? and district = ?'''
+
+	table_name = selected_table     # global var
+	rows_updated = db.updateMultipleRecords(set_columns, where_condition, data, table_name)
+	display_mess(rows_updated)
+
+	table_name += "_fm"     # global var		
+	rows_updated = db.updateMultipleRecords(set_columns, where_condition, data, table_name)
+	display_mess(rows_updated, False)
 	search()
+
+def display_mess(rows_updated, show_mess=True):
+	if rows_updated > 0 and show_mess:
+		messagebox.showinfo("SQL Success!", f"{rows_updated} Record(s) updated successfully")			
+
+	if rows_updated==0:
+		messagebox.showerror("SQL Failed", f"Failed to update record(s)")
+		sys.exit('Fatal Error..............')
 
 def getrow(event):
 	rowid = trv.identify_row(event.y)
@@ -347,9 +369,9 @@ def getrow(event):
 	t4.set(item['values'][3])		
 	t5.set(item['values'][4])		
 
-	t1a.set(' ')
-	t1b.set(' ')
-	t1c.set(' ')		
+	t1a.set(item['values'][6])
+	t1b.set(item['values'][7])
+	t1c.set(item['values'][8])		
 
 def customer_data_toggle(isNormal):
 	# print(f"customer_data_toggle -- {isNormal}")
@@ -367,25 +389,6 @@ def customer_data_toggle(isNormal):
 	status = "disabled" if muni=='All...' else 'normal'
 	up_btn5.config(state=status)					
 
-
-def update_poll_info():
-	data={}
-	sql_file = selected_table+"_fm" # This is global		
-	rec_id = t1.get()
-	data['poll_name'] = t1a.get()
-	data['poll_location'] = t1b.get()
-	data['poll_address'] = t1c.get()		
-
-	set_flds = ' SET '
-	for key, value in data.items():
-		set_flds += f"{key} ='{value}',  "
-
-	# set_flds = f"poll_name = {poll_name}, poll_location = {poll_location}, poll_address = {poll_address}"
-	query = f"UPDATE {sql_file} SET {set_flds} WHERE id = {rec_id}"
-	print('poll update query: ', query)
-
-	# db.run_query(query)
-	search()
 
 ## Combobox - Select Dropdown
 def fetch_municipalies():
@@ -500,12 +503,12 @@ def open_file(topLevel_update=None):
 	ent1a = Entry(wrapper2, textvariable=t1a,  width=60, state="disabled")
 	ent1a.grid(row=1, column=4, padx=5, pady=3)
 	global ent1b
-	lbl1b = Label(wrapper2, text="Poll Location")
+	lbl1b = Label(wrapper2, text="Poll Address")
 	lbl1b.grid(row=2, column=3, padx=5, pady=3)
 	ent1b = Entry(wrapper2, textvariable=t1b,  width=60, state="disabled")
 	ent1b.grid(row=2, column=4, padx=5, pady=3)
 	global ent1c
-	lbl1c = Label(wrapper2, text="Poll Address")
+	lbl1c = Label(wrapper2, text="Poll Location")
 	lbl1c.grid(row=3, column=3, padx=5, pady=3)
 	ent1c = Entry(wrapper2, textvariable=t1c,  width=60, state="disabled")
 	ent1c.grid(row=3, column=4, padx=5, pady=3)
@@ -540,10 +543,10 @@ def open_file(topLevel_update=None):
 	up_btn2 = Button(wrapper2, text="Clear", width=7, command=search, state=DISABLED)
 	up_btn2.grid(row=7, column=1, sticky=E, padx=5, pady=3)
 	global up_btn3
-	up_btn3 = Button(wrapper2, text="Update Poll Info", width=14, command=update_poll_info, state=DISABLED)
+	up_btn3 = Button(wrapper2, text="Update Poll Info", width=14, command=update_data, state=DISABLED)
 	up_btn3.grid(row=7, column=4, sticky=W, pady=1)
 	global up_btn4
-	up_btn4 = Button(wrapper2, text="Pollbook Lookup", width=14, command=get_file)
+	up_btn4 = Button(wrapper2, text="Return", width=14, command=get_file)
 	up_btn4.grid(row=7, column=4, sticky=E, pady=1)	
 	global up_btn5
 	up_btn5 = Button(wrapper2, text="Update Forms", width=14, command=win_assign_formno, state=DISABLED)
@@ -613,8 +616,7 @@ def remove_menu():
 def restore_menu():    
 	root.config(menu=my_menu)
 
-
-# sys.exit(f"Quit App.............")
+# sys.exit(f"Quit App............. test")
 
 
 #####################################################
@@ -656,19 +658,21 @@ def win_assign_formno():
 	def save_sql(mwds, my_entries):
 		data = []			
 		for mwd, entry in zip(mwds, my_entries):
-			fld1, fld2, municipality, ward, district, count = mwd 
+			fld1, fld2, municipality, ward, district, count, poll_name, poll_address, poll_location = mwd 
 			form_value = entry.get()
 			dist = str(district) if len(str(district))==2 else '0'+str(district)
 			data.append((form_value, municipality, ward, dist))
 
-		table_name = selected_table     # global var
 		set_columns = '''form_no = ? '''
 		where_condition = '''municipality = ? and ward = ? and district = ?'''
 
-		db.updateMultipleRecords(set_columns, where_condition, data, table_name)
+		table_name = selected_table     # global var
+		rows_updated=db.updateMultipleRecords(set_columns, where_condition, data, table_name)
 
-		table_name = selected_table+"_fm"     # global var		
-		db.updateMultipleRecords(set_columns, where_condition, data, table_name)
+		table_name += "_fm"
+		rows_updated=db.updateMultipleRecords(set_columns, where_condition, data, table_name)
+		display_mess(rows_updated, False)
+
 		open_file(municipality)
 		top.destroy()
 
@@ -719,7 +723,7 @@ def win_assign_formno():
 		y1 = 5
 		y2 = 6
 		offset = 2
-		for row in mwds: print(row)
+		# for row in mwds: print(row)
 		
 		ward_no = mwds[0][3] 				# id, form_no, municipality, ward, district, dcount            
 		muni_name = mwds[0][2]				# (109, 20, 'HIGHTSTOWN', '', 1, 179)

@@ -119,7 +119,12 @@ class Database:
                     else:
                         #===== Additional Fields needed for internal use =====================
                         csv_row.append(0)                       # form_no field
-                        csv_row.append(datetime.datetime.now()) #  create_dt timestamp field
+                        csv_row.append('')                      # poll_name
+                        csv_row.append('')                      # poll_address
+                        csv_row.append('')                      # poll_location
+                        csv_row.append(datetime.datetime.now()) # create_dt timestamp field
+
+
                         #===== Additional Fields needed for internal use =====================
 
                         if number_columns == len(csv_row):
@@ -131,6 +136,8 @@ class Database:
                             else:
                                 error_mess = f"Error: There seems to be a problem with record {record_number}.\nAbort Data Import...."
                                 messagebox.showerror("Fatal Error", error_mess)
+                                sys.exit("quit............................")
+
                                 # Execute the DROP Table SQL statement
                                 dropTableStatement = "DROP TABLE "+table_name
                                 self.cur.execute(dropTableStatement)                                
@@ -164,18 +171,27 @@ class Database:
         table_exists=self.check_table_exists(form_table_name)        
 
         if table_exists == False:
-            self.cur.execute("CREATE TABLE IF NOT EXISTS "+form_table_name+" (id INTEGER PRIMARY KEY, form_no integer, municipality text, ward text, district integer, dcount interger)")
+            self.cur.execute("CREATE TABLE IF NOT EXISTS "+form_table_name+" (id INTEGER PRIMARY KEY, form_no integer,\
+              municipality text, ward text, district integer, poll_name text,\
+               poll_address text, poll_location text, dcount interger)")
+
             self.conn.commit()
 
-            query = f"SELECT municipality, ward, district, count(district) as dcount FROM {table_name} GROUP BY municipality, ward, district ORDER BY municipality, ward, district"
+            query = f"SELECT municipality, ward, district, count(district) as dcount, poll_name, poll_address, poll_location FROM {table_name} GROUP BY municipality, ward, district ORDER BY municipality, ward, district"
             self.cur.execute(query)
             rows = self.cur.fetchall()
+
             for row in rows:
                 municipality = row[0]
                 ward = row[1]
                 district = row[2]
                 dcount = row[3]
-                self.cur.execute("INSERT INTO "+form_table_name+" VALUES (?, ?, ?, ?, ?, ?)", (None, 0, municipality, ward, district, dcount))
+                poll_name = row[4]
+                poll_address = row[5]
+                poll_location = row[6]                
+
+                self.cur.execute("INSERT INTO "+form_table_name+" VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",\
+                 (None, 0, municipality, ward, district, poll_name, poll_address, poll_location, dcount))
             self.conn.commit()
         return form_table_name    
 
@@ -188,8 +204,8 @@ class Database:
     def fetch_mwd(self, table_name, muni=None ):
         form_table_name = table_name+'_fm'
         muni = f"municipality != ''" if muni == None else f"municipality = '{muni}'"
-        query = f"SELECT id, form_no, municipality, ward, district, dcount FROM \
-                    {form_table_name} WHERE "+muni+" ORDER BY municipality, ward, district, dcount"
+        query = f"SELECT id, form_no, municipality, ward, district, dcount, poll_name, poll_address, poll_location FROM \
+                    {form_table_name} WHERE "+muni+" ORDER BY municipality, ward, district"
 
         self.cur.execute(query)
         rows = self.cur.fetchall()
@@ -213,11 +229,17 @@ class Database:
             self.cur.executemany(query,data)
             self.conn.commit()
 
-            print("Total", self.cur.rowcount, "Records updated successfully", table_name)
+            rowcount = self.cur.rowcount
             self.conn.commit()
+            print("Total", self.cur.rowcount, "Records updated successfully", table_name)
+            print('row_count', rowcount)
+            
+            return rowcount
             
         except sqlite3.Error as error:
+            message = f"Failed to update multiple records of sqlite table"
             print("Failed to update multiple records of sqlite table", error)
+            return 0
 
         finally:
             pass
@@ -270,15 +292,14 @@ class Database:
         #================= Additional Fields needed for internal use =================
         build_tableSchema +=  'form_no interger,'
         build_placeHolder += '?,'            
+        build_tableSchema +=  'poll_name text,'
+        build_placeHolder += '?,'            
+        build_tableSchema +=  'poll_address text,'
+        build_placeHolder += '?,'            
+        build_tableSchema +=  'poll_location text,'
+        build_placeHolder += '?,'            
         build_tableSchema +=  'create_dt timestamp,'  #datetime.datetime.now()
         build_placeHolder += '?,'            
-        build_tableSchema +=  'poll_name text,'  #datetime.datetime.now()
-        build_placeHolder += '?,'            
-        build_tableSchema +=  'poll_address text,'  #datetime.datetime.now()
-        build_placeHolder += '?,'            
-        build_tableSchema +=  'poll_location text,'  #datetime.datetime.now()
-        build_placeHolder += '?,'            
-        
 
         build_tableSchema = build_tableSchema[:-1]
         query = "CREATE TABLE IF NOT EXISTS "+table_name+" ( "+build_tableSchema+")"     

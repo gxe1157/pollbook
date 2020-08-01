@@ -276,134 +276,138 @@ def show_page(header_text):
 		project_name.pack(ipadx=80, ipady=5)
 		project_name.config(state=DISABLED)				
 
+
+#============================= Inner Funtions =========================================
+def update(rows):
+	trv.delete(*trv.get_children())
+	for i in rows:
+		trv.insert('', 'end', values=i)
+
+def search():
+	if mycombo.get() =='All...':
+		clear()
+	else:
+		get_rows()
+
+def get_rows():
+	clear_inputs()
+	muni = mycombo.get().upper()
+	rows = db.fetch_mwd(selected_table, muni) # This is global
+	update(rows)
+
+def clear():
+	clear_inputs()	
+	rows = db.fetch_mwd(selected_table) # This is global	
+	update(rows)
+
+def clear_inputs():
+	t1.set(' ')
+	t2.set(' ')
+	t3.set(' ')		
+	t4.set(' ')		
+	t5.set(' ')		
+	t1a.set(' ')
+	t1b.set(' ')
+	t1c.set(' ')		
+
+	customer_data_toggle(False)
+
+def update_data():
+	sql_file = selected_table+"_fm" # This is global		
+	rec_id = t1.get()
+	form_no = t2.get()
+	muni= t3.get()
+
+	query = f"UPDATE {sql_file} SET form_no = {form_no} WHERE id = {rec_id}"
+	db.run_query(query)
+	search()
+
+def getrow(event):
+	rowid = trv.identify_row(event.y)
+	item = trv.item(trv.focus())
+
+	# enable these inputs fields and buttons
+	customer_data_toggle(True)
+	t1.set(item['values'][0])
+	t2.set(item['values'][1])
+	t3.set(item['values'][2])		
+	t4.set(item['values'][3])		
+	t5.set(item['values'][4])		
+
+	t1a.set(' ')
+	t1b.set(' ')
+	t1c.set(' ')		
+
+def customer_data_toggle(isNormal):
+	# print(f"customer_data_toggle -- {isNormal}")
+	status = "normal" if isNormal else "disabled"
+	up_btn1.config(state=status)
+	up_btn2.config(state=status)
+	up_btn3.config(state=status)	
+	ent2.config(state=status)
+	ent1a.config(state=status)			
+	ent1b.config(state=status)			
+	ent1c.config(state=status)
+
+	# topwindow toggle button 
+	muni = mycombo.get()
+	status = "disabled" if muni=='All...' else 'normal'
+	up_btn5.config(state=status)					
+
+
+def update_poll_info():
+	data={}
+	sql_file = selected_table+"_fm" # This is global		
+	rec_id = t1.get()
+	data['poll_name'] = t1a.get()
+	data['poll_location'] = t1b.get()
+	data['poll_address'] = t1c.get()		
+
+	set_flds = ' SET '
+	for key, value in data.items():
+		set_flds += f"{key} ='{value}',  "
+
+	# set_flds = f"poll_name = {poll_name}, poll_location = {poll_location}, poll_address = {poll_address}"
+	query = f"UPDATE {sql_file} SET {set_flds} WHERE id = {rec_id}"
+	print('poll update query: ', query)
+
+	# db.run_query(query)
+	search()
+
+## Combobox - Select Dropdown
+def fetch_municipalies():
+	rows = db.fetch_clients(selected_table) #SELECTED_TABLE IS GLOBAL
+	options = ['All...']
+	for row in rows:
+		options.append(f"{row[1]}")
+	return options
+
+def get_municipality(event):
+	muni = mycombo.get()
+	search()
+
+## my_listbox functions
+def delete_one():
+	my_listbox.delete(ANCHOR)
+
+def delete_all():
+	my_listbox.delete(0, END)  # "end"
+
+def select_show():
+	my_label.config(text=my_listbox.get(ANCHOR))		
+
+def select_all():
+	result = ''
+	for item in my_listbox.curselection():
+		result = result + mylistbox(item) +'\n'
+
+def delete_multiple():
+	for item in reverse(my_listbox.curselection()):
+		my_listbox.delete(item)
+
 # Open Poll Book
-def open_file():
+def open_file(topLevel_update=None):
 	reset_run_frame(open_frame)
-	#============================= Inner Funtions =========================================
-	def update(rows):
-		trv.delete(*trv.get_children())
-		for i in rows:
-			trv.insert('', 'end', values=i)
-
-	def search():
-		muni = mycombo.get()		
-		if muni == None or muni =='All...':
-			clear()
-		else:
-			clear_inputs()
-			q2 = muni.upper()
-			rows = db.fetch_mwd(selected_table, q2) # This is global
-			update(rows)
-
-	def clear():
-		clear_inputs()	
-		rows = db.fetch_mwd(selected_table) # This is global	
-		update(rows)
-
-	def clear_inputs():
-		t1.set(' ')
-		t2.set(' ')
-		t3.set(' ')		
-		t4.set(' ')		
-		t5.set(' ')		
-		t1a.set(' ')
-		t1b.set(' ')
-		t1c.set(' ')		
-
-		customer_data_toggle(False)
-
-	def update_data():
-		sql_file = selected_table+"_fm" # This is global		
-		rec_id = t1.get()
-		form_no = t2.get()
-		muni= t3.get()
-
-		query = f"UPDATE {sql_file} SET form_no = {form_no} WHERE id = {rec_id}"
-		db.run_query(query)
-		search()
-
-	def getrow(event):
-		rowid = trv.identify_row(event.y)
-		item = trv.item(trv.focus())
-
-		# enable these inputs fields and buttons
-		customer_data_toggle(True)
-		t1.set(item['values'][0])
-		t2.set(item['values'][1])
-		t3.set(item['values'][2])		
-		t4.set(item['values'][3])		
-		t5.set(item['values'][4])		
-
-		t1a.set(' ')
-		t1b.set(' ')
-		t1c.set(' ')		
-
-	def customer_data_toggle(isNormal):
-		# print(f"customer_data_toggle -- {isNormal}")
-		status = "normal" if isNormal else "disabled"
-		up_btn1.config(state=status)
-		up_btn2.config(state=status)
-		up_btn3.config(state=status)	
-		ent2.config(state=status)
-		ent1a.config(state=status)			
-		ent1b.config(state=status)			
-		ent1c.config(state=status)
-
-		# topwindow toggle button 
-		muni = mycombo.get()
-		status = "disabled" if muni=='All...' else 'normal'
-		up_btn5.config(state=status)					
-
-
-	def update_poll_info():
-		data={}
-		sql_file = selected_table+"_fm" # This is global		
-		rec_id = t1.get()
-		data['poll_name'] = t1a.get()
-		data['poll_location'] = t1b.get()
-		data['poll_address'] = t1c.get()		
-
-		set_flds = ' SET '
-		for key, value in data.items():
-			set_flds += f"{key} ='{value}',  "
-
-		# set_flds = f"poll_name = {poll_name}, poll_location = {poll_location}, poll_address = {poll_address}"
-		query = f"UPDATE {sql_file} SET {set_flds} WHERE id = {rec_id}"
-		print('poll update query: ', query)
-
-		# db.run_query(query)
-		search()
-
-	## Combobox - Select Dropdown
-	def fetch_municipalies():
-		rows = db.fetch_clients(selected_table) #SELECTED_TABLE IS GLOBAL
-		options = ['All...']
-		for row in rows:
-			options.append(f"{row[1]}")
-		return options
-
-	def get_municipality(event):
-		muni = mycombo.get()
-		search()
-
-	## my_listbox functions
-	def delete_one():
-		my_listbox.delete(ANCHOR)
-
-	def delete_all():
-		my_listbox.delete(0, END)  # "end"
-
-	def select_show():
-		my_label.config(text=my_listbox.get(ANCHOR))		
-
-	def select_all():
-		result = ''
-		for item in my_listbox.curselection():
-			result = result + mylistbox(item) +'\n'
-
-	def delete_multiple():
-		for item in reverse(my_listbox.curselection()):
-			my_listbox.delete(item)
 
 	# Page Header 
 	header_text = selected_table.replace('_', ' ')
@@ -444,7 +448,7 @@ def open_file():
 	trv.column(1, minwidth=0, width=100, anchor=E, stretch=YES)
 	trv.heading(2, text="Form No.")
 	trv.column(2, minwidth=0, anchor=CENTER, width=100, stretch=NO)
-	trv.heading(3, text="Municipality")
+	trv.heading(3, text=  "Municipality")
 	trv.column(4, minwidth=0, width=170, stretch=YES)
 	trv.heading(4, text="Ward")
 	trv.column(4, minwidth=0, anchor=E, width=100, stretch=NO)
@@ -525,15 +529,19 @@ def open_file():
 	global up_btn3
 	up_btn3 = Button(wrapper2, text="Update Poll Info", width=14, command=update_poll_info, state=DISABLED)
 	up_btn3.grid(row=7, column=4, sticky=W, pady=1)
-
+	global up_btn4
 	up_btn4 = Button(wrapper2, text="Pollbook Lookup", width=14, command=get_file)
 	up_btn4.grid(row=7, column=4, sticky=E, pady=1)	
-	up_btn5 = Button(wrapper2, text="Update Forms", width=14, command=win_assign_formno)
+	global up_btn5
+	up_btn5 = Button(wrapper2, text="Update Forms", width=14, command=win_assign_formno, state=DISABLED)
 	up_btn5.grid(row=7, column=4, pady=1)	
 	
 	#========================== Select a job number and display default records =======================
-	clear()
-
+	if topLevel_update != None:
+		mycombo.current(mycombo['values'].index(topLevel_update))
+		search()
+	else:	
+		clear()
 
 # Start Screen
 def home():
@@ -614,9 +622,6 @@ positionDown = int(root.winfo_screenheight()/3 - windowHeight/2)
 # Positions the window in the center of the page.
 root.geometry("+{}+{}".format(positionRight, positionDown))
 
-my_entries = []
-my_labels = []
-
 def win_assign_formno():
 	top = Toplevel()
 	top.title('window 2')
@@ -625,16 +630,22 @@ def win_assign_formno():
 	top.geometry("+{}+{}".format(positionRight, positionDown))
 	top.attributes('-topmost', 'true') # Make topLevelWindow remain on top until destroyed, or attribute changes.
 
+
+    #=============================================#
+	# Global Obj and Vas
+    #=============================================#
+	my_entries = []
+
+
     #=============================================#
     # Toplevel Windowmethods
     #=============================================#    
 	def save_sql(mwds, my_entries):
 		data = []			
 		for mwd, entry in zip(mwds, my_entries):
-			fld1, fld2, municipality, ward, district, count = mwd
+			fld1, fld2, municipality, ward, district, count = mwd 
 			form_value = entry.get()
 			dist = str(district) if len(str(district))==2 else '0'+str(district)
-			# ward = ward if len(ward)>0 else ''
 			data.append((form_value, municipality, ward, dist))
 
 		table_name = selected_table     # global var
@@ -645,6 +656,8 @@ def win_assign_formno():
 
 		table_name = selected_table+"_fm"     # global var		
 		db.updateMultipleRecords(set_columns, where_condition, data, table_name)
+		open_file(municipality)
+		top.destroy()
 
 	def clear_fields(my_entries):
 		for i, item in enumerate(my_entries):
@@ -670,7 +683,7 @@ def win_assign_formno():
 
 		my_entry = Entry(top, width=10)     
 		my_entry.grid(row=r2, column=x, pady=5, padx=5)
-		my_labels.append(my_label)		
+		# my_labels.append(my_label)		
 
 		if item[1] >0:
 			my_entry.config({"background": "#f5efd0"})          #DEDCDC

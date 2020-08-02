@@ -130,12 +130,18 @@ def new_file():
 
 	button1 = Button(buttonframe, text='Return', width=12, command=logged_in)
 	button1.pack( side = LEFT)
+	button1.bind("<Enter>", lambda event: btn_status(event, button1))
+	button1.bind("<Leave>", lambda event: btn_status_out(event, button1))
 
 	button2 = Button(buttonframe, text='Clear Fields', width=12, command=new_file)
 	button2.pack( side = LEFT )
+	button2.bind("<Enter>", lambda event: btn_status(event, button2))
+	button2.bind("<Leave>", lambda event: btn_status_out(event, button2))
 
 	button3 = Button(buttonframe, text='Create Job', width=12, command=dir_browse)
 	button3.pack( side = LEFT )
+	button3.bind("<Enter>", lambda event: btn_status(event, button3))
+	button3.bind("<Leave>", lambda event: btn_status_out(event, button3))
 
 
 def get_file():
@@ -152,9 +158,13 @@ def get_file():
 
 	button1 = Button(buttonframe, text='Return', width=12, command=logged_in)
 	button1.pack( side = LEFT)
+	button1.bind("<Enter>", lambda event: btn_status(event, button1))
+	button1.bind("<Leave>", lambda event: btn_status_out(event, button1))
 
 	button2 = Button(buttonframe, text='Clear Fields', width=12, command=get_file)
 	button2.pack( side = LEFT )
+	button2.bind("<Enter>", lambda event: btn_status(event, button2))
+	button2.bind("<Leave>", lambda event: btn_status_out(event, button2))
 
 def show_page(header_text):
 
@@ -419,6 +429,19 @@ def delete_multiple():
 	for item in reverse(my_listbox.curselection()):
 		my_listbox.delete(item)
 
+def btn_status(event, btn_state):
+	if str(btn_state['state']) == 'disabled':
+		btn_state['bg'] = "#d1c8b0"
+	else:
+		btn_state['bg'] = "#b0d1b9"
+
+	print('button status in ')
+
+def btn_status_out(event, btn_state):
+	btn_state['bg'] = "SystemButtonFace"
+	print('button status out')
+
+
 # Open Poll Book
 def open_file(topLevel_update=None):
 	reset_run_frame(open_frame)
@@ -537,18 +560,32 @@ def open_file(topLevel_update=None):
 	global up_btn1
 	up_btn1 = Button(wrapper2, text="Update",  width=7, command=update_data, state=DISABLED)
 	up_btn1.grid(row=7, column=1, sticky=W, padx=5, pady=3)
+	up_btn1.bind("<Enter>", lambda event: btn_status(event, up_btn1))
+	up_btn1.bind("<Leave>", lambda event: btn_status_out(event, up_btn1))
+
 	global up_btn2
 	up_btn2 = Button(wrapper2, text="Clear", width=7, command=search, state=DISABLED)
 	up_btn2.grid(row=7, column=1, sticky=E, padx=5, pady=3)
+	up_btn2.bind("<Enter>", lambda event: btn_status(event, up_btn2))
+	up_btn2.bind("<Leave>", lambda event: btn_status_out(event, up_btn2))
+
 	global up_btn3
 	up_btn3 = Button(wrapper2, text="Update Poll Info", width=14, command=update_data, state=DISABLED)
 	up_btn3.grid(row=7, column=4, sticky=W, pady=1)
+	up_btn3.bind("<Enter>", lambda event: btn_status(event, up_btn3))
+	up_btn3.bind("<Leave>", lambda event: btn_status_out(event, up_btn3))
+
 	global up_btn4
 	up_btn4 = Button(wrapper2, text="Return", width=14, command=get_file)
 	up_btn4.grid(row=7, column=4, sticky=E, pady=1)	
+	up_btn4.bind("<Enter>", lambda event: btn_status(event, up_btn4))
+	up_btn4.bind("<Leave>", lambda event: btn_status_out(event, up_btn4))
+
 	global up_btn5
 	up_btn5 = Button(wrapper2, text="Update Forms", width=14, command=win_assign_formno, state=DISABLED)
 	up_btn5.grid(row=7, column=4, pady=1)	
+	up_btn5.bind("<Enter>", lambda event: btn_status(event, up_btn5))
+	up_btn5.bind("<Leave>", lambda event: btn_status_out(event, up_btn5))
 	
 	#========================== Select a job number and display default records =======================
 	if topLevel_update != None:
@@ -579,9 +616,13 @@ def home():
 
 	button1 = Button(buttonframe, text='Exit', width=12, command=root.quit)
 	button1.pack( side = LEFT )
+	button1.bind("<Enter>", lambda event: btn_status(event, button1))
+	button1.bind("<Leave>", lambda event: btn_status_out(event, button1))
 
 	button2 = Button(buttonframe, text='Submit', width=12, command=logged_in)
 	button2.pack( side = LEFT)
+	button2.bind("<Enter>", lambda event: btn_status(event, button2))
+	button2.bind("<Leave>", lambda event: btn_status_out(event, button2))
 
 	remove_menu()
 

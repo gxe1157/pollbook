@@ -205,18 +205,16 @@ def show_page(header_text):
 			pass
 
 	def jobs_listbox(my_flash):
-		wrapper_listbox_jobs = Frame(new_frame, relief="raised" )
-		wrapper_listbox_jobs.pack(fill="none", expand="no", padx="10", pady="5")
-		#Scrollbar
-		scrollbar_jobs = Scrollbar(wrapper_listbox_jobs, orient=VERTICAL)
-		#list Box - SINGLE, BROWSE, MULTIPLE, EXTENED
+		frame = Frame(new_frame, relief="raised")
+		scrollbar = Scrollbar(frame, orient=VERTICAL)
 		global listbox_jobs
-		listbox_jobs = Listbox(wrapper_listbox_jobs, width=65, yscrollcommand=scrollbar_jobs.set)
-		scrollbar_jobs.config(command=listbox_jobs.yview) 		#scrollbar configure
-		scrollbar_jobs.pack(side=RIGHT, fill=Y)
-		wrapper_listbox_jobs.pack()
-		listbox_jobs.pack()
+		listbox_jobs = Listbox(frame, width=40, font=("helvetica", 11), yscrollcommand=scrollbar.set)
+		scrollbar.config(command=listbox_jobs.yview)
+		scrollbar.pack(side=RIGHT, fill=Y)
+		listbox_jobs.pack(side=LEFT, fill=NONE, expand=NO)		
 		listbox_jobs.bind('<<ListboxSelect>>', lambda event: listbox_jobs_select(event, my_flash)) 	# Bind select
+		frame.pack()
+
 
 	def listbox_jobs_select(event, my_flash):
 		# print('listbox_jobs_selected',my_flash.cget('text'))

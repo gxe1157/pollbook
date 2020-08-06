@@ -434,12 +434,11 @@ def btn_status(event, btn_state):
 		btn_state['bg'] = "#d1c8b0"
 	else:
 		btn_state['bg'] = "#b0d1b9"
-
-	print('button status in ')
+	# print('button status in ')
 
 def btn_status_out(event, btn_state):
 	btn_state['bg'] = "SystemButtonFace"
-	print('button status out')
+	# print('button status out')
 
 
 # Open Poll Book
@@ -798,12 +797,18 @@ def win_assign_formno():
 
 		button1 = Button(buttonframe, text='Cancel', width=12, command=top.destroy)
 		button1.pack( side = LEFT)
+		button1.bind("<Enter>", lambda event: btn_status(event, button1))
+		button1.bind("<Leave>", lambda event: btn_status_out(event, button1))
 
 		button2 = Button(buttonframe, text='Clear Fields', width=12, command=lambda: clear_fields(my_entries))
 		button2.pack( side = LEFT )
+		button2.bind("<Enter>", lambda event: btn_status(event, button2))
+		button2.bind("<Leave>", lambda event: btn_status_out(event, button2))
 
 		button3 = Button(buttonframe, text='Save', width=12, command=lambda: save_sql(mwds, my_entries))
 		button3.pack( side = LEFT )
+		button3.bind("<Enter>", lambda event: btn_status(event, button3))
+		button3.bind("<Leave>", lambda event: btn_status_out(event, button3))
 
 	# Page Header 
 	muni = mycombo.get()

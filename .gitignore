@@ -129,3 +129,5 @@ dmypy.json
 pollbook.db
 pollbook.db
 error_mess.png
+_archive/main.txt
+main.txt

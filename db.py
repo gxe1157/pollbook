@@ -106,6 +106,7 @@ class Database:
                 for row in file:
                     # remove carraige return '\n'
                     row = row.strip('\n')
+                    row = row.replace('"',"") 
                     # create list - array
                     csv_row = row.split("|")
                     # remove last empty element which has no corresponding fieldname
@@ -182,7 +183,7 @@ class Database:
             rows = self.cur.fetchall()
 
             for row in rows:
-                municipality = row[0]
+                municipality = row[0].upper()
                 ward = row[1]
                 district = row[2]
                 dcount = row[3]
@@ -233,7 +234,8 @@ class Database:
             self.conn.commit()
             print("Total", self.cur.rowcount, "Records updated successfully", table_name)
             print('row_count', rowcount)
-            
+            # print(query)
+            # print(data)
             return rowcount
             
         except sqlite3.Error as error:
@@ -285,7 +287,9 @@ class Database:
         build_placeHolder = ''
 
         for fld_name in headers:
-            fieldType = 'TEXT'
+            fld_name = fld_name.replace("-","_")             
+            fld_name = fld_name.replace(" ","_") 
+            fieldType = 'TEXT collate nocase' if fld_name=="MUNICIPALITY" else 'TEXT'
             build_tableSchema +=  fld_name+' '+fieldType+','
             build_placeHolder += '?,'            
 
@@ -303,7 +307,7 @@ class Database:
 
         build_tableSchema = build_tableSchema[:-1]
         query = "CREATE TABLE IF NOT EXISTS "+table_name+" ( "+build_tableSchema+")"     
-        # print(query)
+        print(query)
         self.cur.execute(query)
         self.conn.commit()
 

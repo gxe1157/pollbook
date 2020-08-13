@@ -336,7 +336,11 @@ def clear_inputs():
 def update_data():
 	form_no = t2.get()
 	municipality = t3.get()
+
 	ward = t4.get() 
+	if (ward != ''):
+		ward = str(ward) if len(str(ward))==2 else '0'+str(ward)	
+
 	dist_temp = t5.get()
 	district = str(dist_temp) if len(str(dist_temp))==2 else '0'+str(dist_temp)	
 	poll_name = t1a.get()

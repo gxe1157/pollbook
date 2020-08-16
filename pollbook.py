@@ -617,7 +617,7 @@ def home():
 	buttonframe = Frame(start_frame)
 	buttonframe.pack(pady=20)
 
-	button1 = Button(buttonframe, text='Exit', width=12, command=root.quit)
+	button1 = Button(buttonframe, text='Exit', width=12, command=root.destroy)
 	button1.pack( side = LEFT )
 	button1.bind("<Enter>", lambda event: btn_status(event, button1))
 	button1.bind("<Leave>", lambda event: btn_status_out(event, button1))
@@ -679,14 +679,27 @@ positionDown = int(root.winfo_screenheight()/3 - windowHeight/2)
 # Positions the window in the center of the page.
 root.geometry("+{}+{}".format(positionRight, positionDown))
 
+def on_closing():
+    if messagebox.askokcancel("Quit", "Do you want to log out?"):
+        home()
+
+root.protocol("WM_DELETE_WINDOW", on_closing)
+
+
 def win_assign_formno():
+	root.withdraw()	
+
 	top = Toplevel()
-	top.title('window 2')
+	top.title('Top - window 2')
 	top.geometry("900x700")
 	top.resizable(False, False)
 	top.geometry("+{}+{}".format(positionRight, positionDown))
-	top.attributes('-topmost', 'true') # Make topLevelWindow remain on top until destroyed, or attribute changes.
 
+	def on_closing():
+	    if messagebox.askokcancel("Quit", "Do you want to quit?"):
+	        top_close()
+
+	top.protocol("WM_DELETE_WINDOW", on_closing)
 
     #=============================================#
 	# Global Obj and Vas
@@ -697,6 +710,10 @@ def win_assign_formno():
     #=============================================#
     # Toplevel Windowmethods
     #=============================================#    
+	def top_close():
+		root.deiconify()
+		top.destroy()
+
 	def save_sql(mwds, my_entries):
 		data = _format_data(mwds, my_entries)   # return (form_value, municipality, ward, dist)
 		set_columns = '''form_no = ? '''
@@ -803,7 +820,7 @@ def win_assign_formno():
 		buttonframe = Frame(top)
 		buttonframe.grid(row=y2, column=0, columnspan=9, pady=15)
 
-		button1 = Button(buttonframe, text='Close', width=12, command=top.destroy)
+		button1 = Button(buttonframe, text='Close', width=12, command=top_close)
 		button1.pack( side = LEFT)
 		button1.bind("<Enter>", lambda event: btn_status(event, button1))
 		button1.bind("<Leave>", lambda event: btn_status_out(event, button1))
@@ -828,16 +845,24 @@ def win_assign_formno():
     # Second Toplevel
     #=============================================#    
 	def _print_export(mwds, my_entries):
-		root.withdraw()
+		# root.withdraw()
 		top.withdraw()
+		top.attributes('-topmost', 'false')
 
 		top2 = Toplevel()
 		top2.title('window 3')
 		top2.geometry("600x500")
 		top2.resizable(False, False)
 		top2.geometry("+{}+{}".format(positionRight, positionDown))
+		# top2.update_idletasks()
+		# top2.overrideredirect(True)
 
-		top.attributes('-topmost', 'false')
+		def on_closing():
+		    if messagebox.askokcancel("Quit", "Do you want to quit?"):
+		        top2_close()
+
+		top2.protocol("WM_DELETE_WINDOW", on_closing)
+
 
 		muni_name = '' 
 		data = _format_data(mwds, my_entries)   # return (form_value, municipality, ward, dist)
@@ -853,7 +878,6 @@ def win_assign_formno():
 		def top2_close():
 			print('Close top2')
 			top.deiconify()			
-			root.deiconify()
 			top2.destroy()
 			top.attributes('-topmost', 'true')
 
@@ -936,7 +960,8 @@ my_menu.add_cascade(label="File", menu=poll_menu)
 poll_menu.add_command(label="Create Poll Book", command=new_file)
 poll_menu.add_command(label="Open Poll Book", command=get_file)
 poll_menu.add_separator()
-poll_menu.add_command(label="Exit", command=root.quit)
+poll_menu.add_command(label="Exit", command=root.destroy)
+# poll_menu.add_command(label="Exit", command=root.destroy)
 
 # Create menu items
 # print_menu = Menu(my_menu, tearoff=0)

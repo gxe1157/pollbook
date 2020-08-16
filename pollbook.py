@@ -692,19 +692,13 @@ def win_assign_formno():
 	# Global Obj and Vas
     #=============================================#
 	my_entries = []
-
+	chkbox_state = {}
 
     #=============================================#
     # Toplevel Windowmethods
     #=============================================#    
 	def save_sql(mwds, my_entries):
-		data = []			
-		for mwd, entry in zip(mwds, my_entries):
-			fld1, fld2, municipality, ward, district, count, poll_name, poll_address, poll_location = mwd 
-			form_value = entry.get()
-			dist = str(district) if len(str(district))==2 else '0'+str(district)
-			data.append((form_value, municipality, ward, dist))
-
+		data = _format_data(mwds, my_entries)   # return (form_value, municipality, ward, dist)
 		set_columns = '''form_no = ? '''
 		where_condition = '''municipality = ? and ward = ? and district = ?'''
 
@@ -717,6 +711,16 @@ def win_assign_formno():
 
 		open_file(municipality)
 		top.destroy()
+
+	def _format_data(mwds, my_entries):
+		data = []			
+		for mwd, entry in zip(mwds, my_entries):
+			fld1, fld2, municipality, ward, district, count, poll_name, poll_address, poll_location = mwd 
+			form_value = entry.get()
+			dist = str(district) if len(str(district))==2 else '0'+str(district)
+			data.append((form_value, municipality, ward, dist))
+
+		return data		
 
 	def clear_fields(my_entries):
 		for i, item in enumerate(my_entries):
@@ -755,10 +759,10 @@ def win_assign_formno():
 		text_mess = f"{header_text}\n\n{muni}"	
 
 		header = Label(top, text=f"{text_mess}", font=("helvetica", 12), relief= RIDGE, bd=5)
-		header.grid(row=0, column=3, columnspan=3, ipadx=20, ipady=5, pady=2)
+		header.grid(row=1, column=3, columnspan=3, ipadx=20, ipady=5, pady=2)
 
 		header1 = Label(top, text=f"", font=("helvetica", 12))
-		header1.grid(row=2, column=0, columnspan=8)
+		header1.grid(row=2, column=0, columnspan=9)
 
 		mwds = db.fetch_mwd(selected_table, muni) # This is global
 		x = 1
@@ -799,7 +803,7 @@ def win_assign_formno():
 		buttonframe = Frame(top)
 		buttonframe.grid(row=y2, column=0, columnspan=9, pady=15)
 
-		button1 = Button(buttonframe, text='Cancel', width=12, command=top.destroy)
+		button1 = Button(buttonframe, text='Close', width=12, command=top.destroy)
 		button1.pack( side = LEFT)
 		button1.bind("<Enter>", lambda event: btn_status(event, button1))
 		button1.bind("<Leave>", lambda event: btn_status_out(event, button1))
@@ -814,17 +818,100 @@ def win_assign_formno():
 		button3.bind("<Enter>", lambda event: btn_status(event, button3))
 		button3.bind("<Leave>", lambda event: btn_status_out(event, button3))
 
+		button4 = Button(buttonframe, text='Print-Export', width=12, command=lambda: _print_export(mwds, my_entries))
+		button4.pack( side = LEFT )
+		button4.bind("<Enter>", lambda event: btn_status(event, button4))
+		button4.bind("<Leave>", lambda event: btn_status_out(event, button4))
+
+
+    #=============================================#
+    # Second Toplevel
+    #=============================================#    
+	def _print_export(mwds, my_entries):
+		root.withdraw()
+		top.withdraw()
+
+		top2 = Toplevel()
+		top2.title('window 3')
+		top2.geometry("600x500")
+		top2.resizable(False, False)
+		top2.geometry("+{}+{}".format(positionRight, positionDown))
+
+		top.attributes('-topmost', 'false')
+
+		muni_name = '' 
+		data = _format_data(mwds, my_entries)   # return (form_value, municipality, ward, dist)
+		data.sort(key = lambda x: x[0])  
+		for f,m,w,d in data:
+			muni_name = m
+			key = f"Form-{f}"
+			chkbox_state[key] = f
+
+		# print(chkbox_state)
+		# print('=================')		
+
+		def top2_close():
+			print('Close top2')
+			top.deiconify()			
+			root.deiconify()
+			top2.destroy()
+			top.attributes('-topmost', 'true')
+
+		def checkboxes():
+			hdr_width = 15
+			font_name = "Bahnschrift"
+			header1 = Label(top2, text="", font=(font_name, 16), width=hdr_width)
+			header1.grid(row=0, column=0)
+			header2 = Label(top2, text="", font=(font_name, 16), width=hdr_width)
+			header2.grid(row=0, column=1)
+			header3 = Label(top2, text="", font=(font_name, 16), width=hdr_width)
+			header3.grid(row=0, column=2)
+
+			for i, machine in enumerate(chkbox_state):
+				if i==0:
+					header = Label(top2, text=f"{muni_name}", font=(font_name, 14),  relief= RIDGE, bd=5)
+					header.grid(row=0, columnspan=3, ipadx=20, ipady=5)
+
+				chkbox_state[machine] = Variable()
+				chkbox = tk.Checkbutton(top2, text=machine, variable=chkbox_state[machine], font=("BahnschriftLight", 12), height=1, width=16, anchor="w")
+				chkbox.grid(row=i+1, columnspan=3)
+				chkbox.deselect()
+
+			return int(i+2)
+
+		# Show checkbox set:
+		btn_row = checkboxes()
+		spacer = Label(top2, text="").grid(row=btn_row, columnspan=3)
+		btn_row +=1		
+		buttonframe = Frame(top2) # highlightbackground="black", highlightthickness=1, bd=2
+		buttonframe.grid(row=btn_row, columnspan=3)
+
+		chk_btn1 = Button(buttonframe, text='Close', width=12, command=top2_close)
+		chk_btn1.pack( side = LEFT)
+		chk_btn1.bind("<Enter>", lambda event: btn_status(event, chk_btn1))
+		chk_btn1.bind("<Leave>", lambda event: btn_status_out(event, chk_btn1))
+
+		chk_btn2 = Button(buttonframe, text='Export CSV', width=12, command=lambda: _export(chkbox_state))
+		chk_btn2.pack( side = LEFT )
+		chk_btn2.bind("<Enter>", lambda event: btn_status(event, chk_btn2))
+		chk_btn2.bind("<Leave>", lambda event: btn_status_out(event, chk_btn2))
+
+		def _export(chkbox_state):
+			for item in chkbox_state:
+				print(f'{item}', chkbox_state[item].get())
+
 	# Page Header 
 	muni = mycombo.get()
 	print(muni)
 	show_districts(muni)
 	top.mainloop()	
 
-
 project_name = StringVar()
 password = StringVar()
 username = StringVar()
 opts = StringVar()
+chkStatus = IntVar()
+chkbox_state = {}
 options = []
 
 # Init varaibles

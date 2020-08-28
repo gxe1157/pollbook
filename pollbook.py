@@ -865,12 +865,12 @@ def win_assign_formno():
 
 
 		muni_name = '' 
-		data = _format_data(mwds, my_entries)   # return (form_value, municipality, ward, dist)
+		data = _format_data(mwds, my_entries)  # return (form_value, municipality, ward, dist)
 		data.sort(key = lambda x: x[0])  
 		for f,m,w,d in data:
 			muni_name = m
 			key = f"Form-{f}"
-			chkbox_state[key] = f
+			chkbox_state[key] = f  # form_value 
 
 		# print(chkbox_state)
 		# print('=================')		
@@ -903,10 +903,50 @@ def win_assign_formno():
 
 			return int(i+2)
 
+		def _export(chkbox_state):
+			for item in chkbox_state:
+				print(f'{item}', chkbox_state[item].get())
+
+		def _spacer(btn_row):
+			btn_row +=1
+			spacer = Label(top2, text="").grid(row=btn_row, columnspan=3)		
+			btn_row +=1
+			return btn_row
+
+		def select(event=None):
+		    my_listbox_out.insert(END, my_listbox_in.get(ANCHOR))
+		    my_listbox_in.delete(ANCHOR)
+
+		def deselect(event=None):
+		    my_listbox_in.insert(END, my_listbox_out.get(ANCHOR))
+		    my_listbox_out.delete(ANCHOR)
+
 		# Show checkbox set:
 		btn_row = checkboxes()
-		spacer = Label(top2, text="").grid(row=btn_row, columnspan=3)
+		btn_row = _spacer(btn_row)
+
+		listbox_frame = Frame(top2) # highlightbackground="black", highlightthickness=1, bd=2
+		listbox_frame.grid(row=btn_row, columnspan=3)
+
+		my_listbox_in = Listbox(listbox_frame, height='5')
+		my_listbox_in.grid(row=0, column=0, padx=10, pady=10)
+		select_btn = Button(listbox_frame, text='>>', width=6, command=select)
+		select_btn.grid(row=0, column=1, padx=10, pady=10, sticky="n")
+		deselect_btn = Button(listbox_frame, text='<<', width=6, command=deselect)
+		deselect_btn.grid(row=0, column=1, padx=10, pady=10, sticky="s")
+		my_listbox_out = Listbox(listbox_frame, height='5')
+		my_listbox_out.grid(row=0, column=2, padx=(0,10), pady=10)
+
 		btn_row +=1		
+		my_instructions = Label(listbox_frame, text='Use arrow buttons to move selected fields')
+		my_instructions.grid(row=btn_row, column=0, columnspan=3, pady=(0,10))
+
+		my_list = ['1', '2', '4', '6']
+
+		for item in my_list:
+		    my_listbox_in.insert(END, item)
+
+		btn_row = _spacer(btn_row)
 		buttonframe = Frame(top2) # highlightbackground="black", highlightthickness=1, bd=2
 		buttonframe.grid(row=btn_row, columnspan=3)
 
@@ -920,9 +960,7 @@ def win_assign_formno():
 		chk_btn2.bind("<Enter>", lambda event: btn_status(event, chk_btn2))
 		chk_btn2.bind("<Leave>", lambda event: btn_status_out(event, chk_btn2))
 
-		def _export(chkbox_state):
-			for item in chkbox_state:
-				print(f'{item}', chkbox_state[item].get())
+
 
 	# Page Header 
 	muni = mycombo.get()

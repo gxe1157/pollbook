@@ -927,7 +927,6 @@ def win_assign_formno():
 
 		listbox_frame = Frame(top2) # highlightbackground="black", highlightthickness=1, bd=2
 		listbox_frame.grid(row=btn_row, columnspan=3)
-
 		my_listbox_in = Listbox(listbox_frame, height='5')
 		my_listbox_in.grid(row=0, column=0, padx=10, pady=10)
 		select_btn = Button(listbox_frame, text='>>', width=6, command=select)
@@ -942,7 +941,6 @@ def win_assign_formno():
 		my_instructions.grid(row=btn_row, column=0, columnspan=3, pady=(0,10))
 
 		my_list = ['1', '2', '4', '6']
-
 		for item in my_list:
 		    my_listbox_in.insert(END, item)
 

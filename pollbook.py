@@ -921,18 +921,25 @@ def win_assign_formno():
 		    my_listbox_in.insert(END, my_listbox_out.get(ANCHOR))
 		    my_listbox_out.delete(ANCHOR)
 
+		def get_column_names():
+			pass
+		
+
 		# Show checkbox set:
 		btn_row = checkboxes()
 		btn_row = _spacer(btn_row)
 
+		#==== Listbox selection of fields ====#
 		listbox_frame = Frame(top2) # highlightbackground="black", highlightthickness=1, bd=2
 		listbox_frame.grid(row=btn_row, columnspan=3)
 		my_listbox_in = Listbox(listbox_frame, height='5')
 		my_listbox_in.grid(row=0, column=0, padx=10, pady=10)
+
 		select_btn = Button(listbox_frame, text='>>', width=6, command=select)
 		select_btn.grid(row=0, column=1, padx=10, pady=10, sticky="n")
 		deselect_btn = Button(listbox_frame, text='<<', width=6, command=deselect)
 		deselect_btn.grid(row=0, column=1, padx=10, pady=10, sticky="s")
+
 		my_listbox_out = Listbox(listbox_frame, height='5')
 		my_listbox_out.grid(row=0, column=2, padx=(0,10), pady=10)
 
@@ -940,9 +947,13 @@ def win_assign_formno():
 		my_instructions = Label(listbox_frame, text='Use arrow buttons to move selected fields')
 		my_instructions.grid(row=btn_row, column=0, columnspan=3, pady=(0,10))
 
+		# Column names from sqlite3
 		my_list = ['1', '2', '4', '6']
+		# my_list = get_column_names()
 		for item in my_list:
 		    my_listbox_in.insert(END, item)
+
+		#==== Listbox selection of fields ====#
 
 		btn_row = _spacer(btn_row)
 		buttonframe = Frame(top2) # highlightbackground="black", highlightthickness=1, bd=2

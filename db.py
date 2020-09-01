@@ -31,7 +31,14 @@ class Database:
 
         # self.insert_user("admin", "admin123")
 
-    #==========  Metadata Queries ======================================    
+    #==========  Metadata Queries ======================================
+    def table_columns_name(self, table_name):
+        query = f"SELECT * FROM {table_name}"
+        cursor = self.cur.execute(query)
+        names = [description[0] for description in cursor.description]
+        return names
+
+
     def check_table_exists(self, table_name):
         #get the count of tables with the name
         query = "SELECT count(name) FROM sqlite_master WHERE type='table' AND name='" + table_name +"'"

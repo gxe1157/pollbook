@@ -55,7 +55,6 @@ class Database:
         self.conn.close()
         
     #==========  Applications Queries ======================================    
-
     def insert_user(self, username, password):
         self.cur.execute("INSERT INTO users VALUES (NULL, ?, ?)",
                          (username, password))
@@ -220,7 +219,7 @@ class Database:
         return rows
 
     def update_mwd(self, data, table_name ):
-        print(data)
+        # print(data)
         set_flds = ' SET '
         for key, value in data.items():
             set_flds += f"{key} = {value},  "
@@ -253,24 +252,23 @@ class Database:
         finally:
             pass
             
-    # def updateMultipleColumns(id, salary, email):
-    #     try:
-    #         sqlite_update_query = """Update new_developers set salary = ?, email = ? where id = ?"""
-    #         columnValues = (salary, email, id)
-    #         cursor.execute(sqlite_update_query, columnValues)
-    #         sqliteConnection.commit()
-    #     except sqlite3.Error as error:
-    #         print("Failed to update multiple columns of sqlite table", error)
-    #     finally:
-    #         if (sqliteConnection):
-    #             sqliteConnection.close()
-    #             print("sqlite connection is closed")
-
     def run_query(self, query):
         print(query)
         self.cur.execute(query)
         self.conn.commit()        
 
+    def create_csv_file(self, filename, header, query):
+        self.cur.execute(query)
+        data = self.cur.fetchall()
+        # print(filename,len(data))
+        csv_header = header.split(',')
+        with open(filename, 'w', newline='') as file:
+            writer = csv.writer(file)
+            # Add the header/column names
+            writer.writerow(csv_header)
+            # Iterate over `data`  and  write to the csv file
+            for row in data:
+                writer.writerow(row)
 
     #=============================================#
     # Private class methods used only by db.py
@@ -323,4 +321,3 @@ class Database:
     def _insert_record(self, build_placeHolder, csv_row, table_name):
         query = "INSERT INTO "+table_name+" values ("+build_placeHolder+")"     
         self.cur.execute(query, csv_row)
-

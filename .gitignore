@@ -131,3 +131,5 @@ pollbook.db
 error_mess.png
 _archive/main.txt
 main.txt
+*.csv
+*.db

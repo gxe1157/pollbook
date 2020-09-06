@@ -704,7 +704,7 @@ def win_assign_formno():
 	# Global Obj and Vas
     #=============================================#
 	my_entries = []
-	chkbox_state = {}
+	chk_boxes = {}
 
     #=============================================#
     # Toplevel Windowmethods
@@ -865,14 +865,15 @@ def win_assign_formno():
 		muni_name = '' 
 		my_list = []
 
+		# create check boxes
 		data = _format_data(mwds, my_entries)  # return (form_value, municipality, ward, dist)
 		data.sort(key = lambda x: x[0])  
 		for f,m,w,d in data:
 			muni_name = m
 			key = f"Form-{f}"
-			chkbox_state[key] = f  # form_value 
+			chk_boxes[key] = f  # form_value 
 
-		# print(chkbox_state)
+		# print(chk_boxes)
 		# print('=================')		
 
 		def top2_close():
@@ -891,41 +892,50 @@ def win_assign_formno():
 			header3 = Label(top2, text="", font=(font_name, 16), width=hdr_width)
 			header3.grid(row=0, column=2)
 
-			for i, machine in enumerate(chkbox_state):
+			# print('chk_boxes', chk_boxes)
+			# display check boxes on screen
+			for i, chk_box_name in enumerate(chk_boxes):
+				# print('chk_box_name', chk_box_name)
 				if i==0:
 					header = Label(top2, text=f"{muni_name}", font=(font_name, 14),  relief= RIDGE, bd=5)
 					header.grid(row=0, columnspan=3, ipadx=20, ipady=5)
 
-				chkbox_state[machine] = Variable()
-				chkbox = tk.Checkbutton(top2, text=machine, variable=chkbox_state[machine], font=("BahnschriftLight", 12), height=1, width=16, anchor="w")
+				chk_boxes[chk_box_name] = IntVar()
+				chkbox = tk.Checkbutton(top2, text=chk_box_name, variable=chk_boxes[chk_box_name], font=("BahnschriftLight", 12), height=1, width=16, anchor="w")
 				chkbox.grid(row=i+1, columnspan=3)
 				chkbox.deselect()
 
 			return int(i+2)
 
-		def _export(chkbox_state):
+		def _export(chk_boxes):
+			# confirm a check box was selected
 			total = 0
-			for item in chkbox_state:
-				print(f'{item}', chkbox_state[item].get())
-				total = chkbox_state[item].get()
-				if total == '1':
-					print("Do Export to CSV....")
-					break
+			for item in chk_boxes:
+				# print(f'{item}', chk_boxes[item].get())
+				total = chk_boxes[item].get()
 
 			if total =='0':
 				resp = f"Ooops.... You forgot to select a checkbox!"
 				messagebox.showerror("Error:", resp)
-			else:
+			elif my_listbox_out.size() == 0:
+				# my_listbox_out is empty
+				resp = f"Ooops.... You forgot to select field names for export!"
+				messagebox.showerror("Error:", resp)
+			else:   
 			   export_csv()
 
 		def export_csv():
-			print('my_listbox_out',my_listbox_out.get(0, END))
-			# base on chk_box do sql query
-			# sql query to csv with header
-			# https://stackoverflow.com/questions/3710263/how-do-i-create-a-csv-file-from-database-in-python
-			# https://stackoverflow.com/questions/47107717/sql-query-output-to-csv
+			dir_path = filedialog.askdirectory()
+			header = ",".join(my_listbox_out.get(0, END))
+			for item in chk_boxes:
+				# print(f'Check Boxes: {item}', chk_boxes[item].get())
+				form_no = item.split('-')[1]
+				filename = (muni_name+' '+item).replace(' ', '_')
+				filename = dir_path+"/"+filename+".csv"
+				query = f"SELECT {header} FROM {selected_table} WHERE form_no={form_no}"
+				db.create_csv_file(filename, header, query)
+
 			messagebox.showinfo("Information","Exporting to CSV...")
-			pass   
 
 		def _spacer(btn_row):
 			btn_row +=1
@@ -1010,7 +1020,7 @@ def win_assign_formno():
 		chk_btn1.bind("<Enter>", lambda event: btn_status(event, chk_btn1))
 		chk_btn1.bind("<Leave>", lambda event: btn_status_out(event, chk_btn1))
 
-		chk_btn2 = Button(buttonframe, text='Export CSV', width=12, command=lambda: _export(chkbox_state))
+		chk_btn2 = Button(buttonframe, text='Export CSV', width=12, command=lambda: _export(chk_boxes))
 		chk_btn2.pack( side = LEFT )
 		chk_btn2.bind("<Enter>", lambda event: btn_status(event, chk_btn2))
 		chk_btn2.bind("<Leave>", lambda event: btn_status_out(event, chk_btn2))
@@ -1028,7 +1038,7 @@ password = StringVar()
 username = StringVar()
 opts = StringVar()
 chkStatus = IntVar()
-chkbox_state = {}
+chk_boxes = {}
 options = []
 
 # Init varaibles

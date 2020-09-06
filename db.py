@@ -6,30 +6,28 @@ class Database:
         self.conn = sqlite3.connect(db)
         self.cur = self.conn.cursor()
 
-        self.cur.execute(
-            "CREATE TABLE IF NOT EXISTS customers (id INTEGER PRIMARY KEY, abbr_name text, county text, contact text)")
+        # db -> pollbook.db and init tables
+        if self.check_table_exists('users') == 0:
+            self.cur.execute(
+                "CREATE TABLE IF NOT EXISTS customers (id INTEGER PRIMARY KEY, abbr_name text, county text, contact text)")
+            self.cur.execute(
+                "CREATE TABLE IF NOT EXISTS election_events (id INTEGER PRIMARY KEY, event text)")
+            self.cur.execute(
+                "CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY, username text, password text)")
 
-        self.cur.execute(
-            "CREATE TABLE IF NOT EXISTS election_events (id INTEGER PRIMARY KEY, event text)")
+            self.insert_events("Primary")
+            self.insert_events("General")
+            self.insert_events("Board of Education")        
+            self.insert_events("Municipal")
+            self.insert_events("Municipal Run Off")
+            self.insert_customer("Bergen", "Bergen County", "Supervisor")
+            self.insert_customer("Hudson", "Hudson County", "Supervisor")
+            self.insert_customer("Mercer", "Mercer County", "Supervisor")
+            self.insert_customer("Union", "Union County", "Supervisor")
+            self.insert_user("admin", "admin123")
 
-        self.cur.execute(
-            "CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY, username text, password text)")
+            self.conn.commit()
 
-        self.conn.commit()
-
-        # db -> pollbook.db
-        # self.insert_customer("Bergen", "Bergen County", "Supervisor")
-        # self.insert_customer("Hudson", "Hudson County", "Supervisor")
-        # self.insert_customer("Mercer", "Mercer County", "Supervisor")
-        # self.insert_customer("Union", "Union County", "Supervisor")
-
-        # self.insert_events("Primary")
-        # self.insert_events("General")
-        # self.insert_events("Board of Education")        
-        # self.insert_events("Municipal")
-        # self.insert_events("Municipal Run Off")
-
-        # self.insert_user("admin", "admin123")
 
     #==========  Metadata Queries ======================================
     def table_columns_name(self, table_name):
@@ -44,6 +42,7 @@ class Database:
         query = "SELECT count(name) FROM sqlite_master WHERE type='table' AND name='" + table_name +"'"
         self.cur.execute(query)
         table_exists = self.cur.fetchone()[0]
+        print(f'Table_name {table_name}: {table_exists}')
         return table_exists    
 
     def fetch_tables_list(self):

@@ -716,6 +716,8 @@ def win_assign_formno():
 
 	def save_sql(mwds, my_entries):
 		data = _format_data(mwds, my_entries)   # return (form_value, municipality, ward, dist)
+		municipality=data[0][1]
+
 		set_columns = '''form_no = ? '''
 		where_condition = '''municipality = ? and ward = ? and district = ?'''
 
@@ -727,7 +729,8 @@ def win_assign_formno():
 		display_mess(rows_updated, False)
 
 		open_file(municipality)
-		top.destroy()
+		top_close()
+		# top.destroy()
 
 	def _format_data(mwds, my_entries):
 		data = []			
